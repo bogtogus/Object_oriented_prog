@@ -3,6 +3,9 @@
 #include "inputfields.h"
 #include <QDebug>
 #include <QMessageBox>
+#include <QMenuBar>
+#include <QMenu>
+#include <QToolBar>
 
 MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
     aChildWin(parent),
@@ -16,11 +19,9 @@ MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
     this->setWindowTitle("Склад лекарств и препаратов");
     this->setGeometry(prnt->geometry());
     setAttribute(Qt::WA_DeleteOnClose);
-    ui->reset->setEnabled(false);
-    ui->delete_found->setEnabled(false);
-    ui->revert->setEnabled(false);
-    ui->submit->setEnabled(false);
-    connect(ui->back, &QPushButton::clicked, this, &MedicinesWindow::goback);
+    ui->verticalLayout->setSpacing(1);
+    init_menubar();
+
     QVector<QString> temp = entity->get_fnames();
     // загрузка модели в виджет QTableView
     init_table();
@@ -69,13 +70,86 @@ void MedicinesWindow::init_table() {
     ui->table->setColumnWidth(0, 20);
 }
 
+void MedicinesWindow::init_menubar() {
+    menubar = new QMenuBar(this);
+    QFont font = menubar->font();
+    font.setPointSize(11);
+    menubar->setFont(font);
+    backact = new QAction(this->style()->standardIcon(QStyle::SP_ArrowLeft),
+                                "",
+                                menubar);
+    backact->setShortcut(Qt::CTRL + Qt::Key_Left);
+    connect(backact, &QAction::triggered, this, &MedicinesWindow::goback);
+    menubar->addAction(backact);
+    progmenu = new QMenu("Программа", menubar);
+    progmenu->addAction("Настройки");
+    //progmenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCloseButton),
+    //                    "Выход",
+    //                    this,
+    //                    &MedicinesWindow::closem,
+    //                    Qt::CTRL + Qt::Key_Q);
+    menubar->addMenu(progmenu);
+    editing = new QMenu("Правка", menubar);
+    editing->addAction("Добавить",
+                       this,
+                       &MedicinesWindow::clicked_on_add);
+    delselact = new QAction("Удалить", editing);
+    delselact->setShortcut(Qt::Key_Delete);
+    connect(ui->table, &QTableView::pressed, this, &MedicinesWindow::enable_deleting);
+    connect(delselact, &QAction::triggered, this, &MedicinesWindow::clicked_on_delete_selected);
+    delselact->setEnabled(false);
+    editing->addAction(delselact);
+    delfoundact = new QAction("Удалить найденные", editing);
+    connect(delfoundact, &QAction::triggered, this, &MedicinesWindow::clicked_on_delete_found);
+    delfoundact->setEnabled(false);
+    editing->addAction(delfoundact);
+    menubar->addMenu(editing);
+
+    searchmenu = new QMenu("Поиск", menubar);
+    searchmenu->addAction("Поиск",
+                          this,
+                          &MedicinesWindow::clicked_on_find,
+                          Qt::CTRL + Qt::Key_F);
+    resetsrchact = new QAction("Сброс поиска", editing);
+    connect(resetsrchact, &QAction::triggered, this, &MedicinesWindow::clicked_on_reset);
+    resetsrchact->setEnabled(false);
+    searchmenu->addAction(resetsrchact);
+    menubar->addMenu(searchmenu);
+
+    toolbar = new QToolBar(this);
+    toolbar->setStyleSheet("QToolBar { padding: 0; spacing: 5px; }");
+    saveact = new QAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton),
+                                "Сохранить", toolbar);
+    saveact->setShortcut(Qt::CTRL + Qt::Key_S);
+    saveact->setEnabled(false);
+    connect(saveact, &QAction::triggered, this, &MedicinesWindow::clicked_on_submit);
+    toolbar->addAction(saveact);
+    revertact = new QAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton),
+                                "Отменить", toolbar);
+    revertact->setShortcut(Qt::CTRL + Qt::Key_R);
+    revertact->setEnabled(false);
+    connect(revertact, &QAction::triggered, this, &MedicinesWindow::clicked_on_revert);
+    toolbar->addAction(revertact);
+    ui->verticalLayout->insertWidget(0, menubar);
+    ui->verticalLayout->insertWidget(1, toolbar);
+}
+
+//void MedicinesWindow::closem() {
+//
+//}
+
 // нажание на кнопку возврата назад
 void MedicinesWindow::goback() {
     if (entity->isDirty()) {
-        QMessageBox::StandardButton resBtn = QMessageBox::question( this, "Возврат назад",
-                                                                    "В базу данных не внемены изменения. Отменить их и вернуться назад?\n",
-                                                                    QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
-                                                                    QMessageBox::No);
+        QMessageBox* msgBox = new QMessageBox("Возврат назад",
+                                              "В базу данных не внемены изменения."
+                                              "Отменить их и вернуться назад?\n",
+                                              QMessageBox::Question,
+                                              QMessageBox::Button::Yes,
+                                              QMessageBox::Button::No,
+                                              QMessageBox::Button::Cancel,
+                                              this);
+        int resBtn = msgBox->exec();
         if (resBtn == QMessageBox::Yes) {
             entity->revertAll();
             emit goback_signal(this);
@@ -86,12 +160,13 @@ void MedicinesWindow::goback() {
     }
 }
 
-void MedicinesWindow::closeEvent(QCloseEvent*) {
+void MedicinesWindow::closeEvent(QCloseEvent* event) {
     qDebug() << "close MedicinesWindow";
+    event->accept();
 }
 
 // переход к форме добавления записи
-void MedicinesWindow::on_add_clicked() {
+void MedicinesWindow::clicked_on_add() {
     qDebug() << fields;
     impl = QSharedPointer<Implement>(new AddMedsImplement());
     QMap<QString, QString> titles = {{"title", "Добавить запись."}, {"exec", "Добавить"}};
@@ -114,53 +189,69 @@ void MedicinesWindow::add_record_db(QSqlRecord* record) {
                              "Ошибка добвления записи в таблицу!");
     }
     //fields_names.clear();
-    ui->submit->setEnabled(true);
-    ui->revert->setEnabled(true);
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
 
 }
 
-// удаление выбранной строки
-void MedicinesWindow::on_delete_selected_clicked() {
-    int selected_row = ui->table->currentIndex().row();
-    if (selected_row < 0) return;
-    QMessageBox::StandardButton resBtn =
-            QMessageBox::question(this, "Удаление",
-                                  "Удалить запись №" +
-                                  QString::number(entity->get_record(selected_row).field(0).value().toLongLong())
-                                  + "?\n",
-                                  QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
-                                  QMessageBox::No);
+// удаление выбранных строк
+void MedicinesWindow::clicked_on_delete_selected() {
+    QItemSelectionModel* selection = ui->table->selectionModel();
+    QModelIndexList selection_list(selection->selectedIndexes());
+    if (selection_list.isEmpty()) return;
+
+    QMessageBox* msgBox = new QMessageBox("Удаление",
+                                          "",
+                                          QMessageBox::Question,
+                                          QMessageBox::Button::Yes,
+                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Cancel,
+                                          this);
+    int resBtn = 0;
+
+    // Быстрая проверка на то, что размер массива равен 1
+    if (selection_list.cbegin() == --selection_list.cend()) {
+        msgBox->setText("Удалить запись №" +
+                        QString::number(
+                            entity->get_record(selection_list.at(0).row()).field(0).value().toLongLong())
+                        + "?\n");
+    }
+    else {
+        msgBox->setText("Удалить выделенные записи?\n");
+    }
+    resBtn = msgBox->exec();
     if (resBtn != QMessageBox::Yes) {
         return;
     }
     else {
-        entity->removeRecord(selected_row);
-        ui->submit->setEnabled(true);
-        ui->revert->setEnabled(true);
+        for (QModelIndex& index : selection_list) {
+            entity->removeRecord(index.row());
+        }
+        saveact->setEnabled(true);
+        revertact->setEnabled(true);
     }
-    //if (ui->table->)
 }
 
 // подтверждение изменений в таблице
-void MedicinesWindow::on_submit_clicked() {
+void MedicinesWindow::clicked_on_submit() {
     if (!entity->submitAll()) {
         qDebug() << entity->lastError();
     }
     else {
-        ui->revert->setEnabled(false);
-        ui->submit->setEnabled(false);
+        saveact->setEnabled(false);
+        revertact->setEnabled(false);
     }
 }
 
 // отмена изменений в таблице
-void MedicinesWindow::on_revert_clicked() {
-    ui->revert->setEnabled(false);
-    ui->submit->setEnabled(false);
+void MedicinesWindow::clicked_on_revert() {
+    saveact->setEnabled(false);
+    revertact->setEnabled(false);
     entity->revertAll();
 }
 
 // переход к форме поиска записи
-void MedicinesWindow::on_find_clicked() {
+void MedicinesWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindMedsImplement());
     QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
     InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
@@ -173,43 +264,50 @@ void MedicinesWindow::on_find_clicked() {
 void MedicinesWindow::find_record_db(QString& where) {
     qDebug() << where;
     entity->setFilter(where);
-    ui->reset->setEnabled(true);
+    resetsrchact->setEnabled(true);
     if (entity->rowCount() == 0) {
         QMessageBox::warning(this, "Ошибка!",
                              "По заданному запросу ничего не найдено!");
     }
     else {
         InFAbs->goback();
-        ui->delete_found->setEnabled(true);
+        delfoundact->setEnabled(true);
     }
 }
 
 // отмена изменений в таблице
-void MedicinesWindow::on_reset_clicked(){
+void MedicinesWindow::clicked_on_reset(){
     entity->setFilter("");
     if (entity->rowCount() == 0) {
         entity->select();
     }
-    ui->reset->setEnabled(false);
-    ui->delete_found->setEnabled(false);
+    resetsrchact->setEnabled(false);
+    delfoundact->setEnabled(false);
 }
 
 // удаление всех найденных записей
-void MedicinesWindow::on_delete_found_clicked() {
+void MedicinesWindow::clicked_on_delete_found() {
     if (entity->filter() == "") return;
-    QMessageBox::StandardButton resBtn = QMessageBox::question( this, "Удаление найденных.",
-                                                                "Удалить все найденные записи?\n",
-                                                                QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
-                                                                QMessageBox::Yes);
+    QMessageBox* msgBox = new QMessageBox("Удаление найденных",
+                                          "Удалить все найденные записи?\n",
+                                          QMessageBox::Question,
+                                          QMessageBox::Button::Yes,
+                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Cancel,
+                                          this);
+    int resBtn = msgBox->exec();
     qDebug() << entity->rowCount();
-    //model->
     if (resBtn == QMessageBox::Yes) {
         entity->removeRecords(0, entity->rowCount());
         QMessageBox::information(this, "Успех!",
                              "Все найденные записи помечены на удаление. "
                              "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
-        ui->submit->setEnabled(true);
-        ui->revert->setEnabled(true);
+        saveact->setEnabled(true);
+        revertact->setEnabled(true);
     }
+}
+
+void MedicinesWindow::enable_deleting() {
+    delselact->setEnabled(true);
 }
 

@@ -1,7 +1,6 @@
 #ifndef MEDICINESWINDOW_H
 #define MEDICINESWINDOW_H
 
-#include "mainwindow.h"
 #include "achildwin.h"
 #include "inputfields.h"
 #include <entities.h>
@@ -23,6 +22,18 @@ public:
     void goback() override;
 private:
     Ui::MedicinesWindow *ui;
+    QMenuBar* menubar;
+    QToolBar* toolbar;
+    QMenu* progmenu;
+    QMenu* editing;
+    QMenu* searchmenu;
+    QAction* backact;
+    QAction* saveact;
+    QAction* revertact;
+    QAction* delselact;
+    QAction* delfoundact;
+    QAction* resetsrchact;
+
     // объект, взаимодействующий с таблицей лекарств в БД
     MedsEntity* entity;
     // Соответствие "Имя столбца в БД"-"Наименование столбца"
@@ -38,16 +49,19 @@ private:
     void add_record_db(QSqlRecord*);
     void find_record_db(QString&);
     void init_table();
+    void init_menubar();
+    //void closem();
 private slots:
     void closeEvent(QCloseEvent*) override;
     void resizeEvent(QResizeEvent *event) override;
-    void on_add_clicked();
-    void on_delete_selected_clicked();
-    void on_submit_clicked();
-    void on_revert_clicked();
-    void on_find_clicked();
-    void on_reset_clicked();
-    void on_delete_found_clicked();
+    void clicked_on_add();
+    void clicked_on_delete_selected();
+    void clicked_on_submit();
+    void clicked_on_revert();
+    void clicked_on_find();
+    void clicked_on_reset();
+    void clicked_on_delete_found();
+    void enable_deleting();
 };
 
 #endif // MEDICINESWINDOW_H

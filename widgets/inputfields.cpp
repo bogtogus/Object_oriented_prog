@@ -2,6 +2,7 @@
 #include "ui_inputfields.h"
 #include "medicineswindow.h"
 #include <QDebug>
+#include <QMessageBox>
 
 inputFields::inputFields(QWidget *parent,
                          const QMap<QString, QString>& titles,

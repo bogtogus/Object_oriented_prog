@@ -2,6 +2,10 @@
 #include "ui_sellhistwindow.h"
 #include <QMessageBox>
 #include <QDebug>
+#include <QMenuBar>
+#include <QMenu>
+#include <QToolBar>
+
 
 SellHistWindow::SellHistWindow(QWidget *parent,
                                MedsEntity* me,
@@ -18,14 +22,12 @@ SellHistWindow::SellHistWindow(QWidget *parent,
     InFAbs = nullptr;
     first_add = -1;
     ui->setupUi(this);
+    ui->verticalLayout->setSpacing(1);
+    init_menubar();
+
     this->setWindowTitle("История продаж");
     this->setGeometry(prnt->geometry());
     setAttribute(Qt::WA_DeleteOnClose);
-    connect(ui->back, &QPushButton::clicked, this, &SellHistWindow::goback);
-    ui->reset->setEnabled(false);
-    ui->delete_found->setEnabled(false);
-    ui->revert->setEnabled(false);
-    ui->submit->setEnabled(false);
     QVector<QString> temp = SEntity->get_fnames();
     init_table();
     for (int i = 0; i < SEntity->get_model()->record().count(); i++) {
@@ -70,13 +72,82 @@ void SellHistWindow::init_table() {
     ui->table->setModel(SEntity->get_model());
 }
 
+void SellHistWindow::init_menubar() {
+    menubar = new QMenuBar(this);
+    QFont font = menubar->font();
+    font.setPointSize(11);
+    menubar->setFont(font);
+    backact = new QAction(this->style()->standardIcon(QStyle::SP_ArrowLeft),
+                                "",
+                                menubar);
+    backact->setShortcut(Qt::CTRL + Qt::Key_Left);
+    connect(backact, &QAction::triggered, this, &SellHistWindow::goback);
+    menubar->addAction(backact);
+    progmenu = new QMenu("Программа", menubar);
+    progmenu->addAction("Настройки");
+    //progmenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCloseButton),
+    //                    "Выход",
+    //                    this,
+    //                    &SellHistWindow::closem,
+    //                    Qt::CTRL + Qt::Key_Q);
+    menubar->addMenu(progmenu);
+    editing = new QMenu("Правка", menubar);
+    editing->addAction("Добавить",
+                       this,
+                       &SellHistWindow::clicked_on_add);
+    delselact = new QAction("Удалить", editing);
+    delselact->setShortcut(Qt::Key_Delete);
+    connect(ui->table, &QTableView::pressed, this, &SellHistWindow::enable_deleting);
+    connect(delselact, &QAction::triggered, this, &SellHistWindow::clicked_on_delete_selected);
+    delselact->setEnabled(false);
+    editing->addAction(delselact);
+    delfoundact = new QAction("Удалить найденные", editing);
+    connect(delfoundact, &QAction::triggered, this, &SellHistWindow::clicked_on_delete_found);
+    delfoundact->setEnabled(false);
+    editing->addAction(delfoundact);
+    menubar->addMenu(editing);
+
+    searchmenu = new QMenu("Поиск", menubar);
+    searchmenu->addAction("Поиск",
+                          this,
+                          &SellHistWindow::clicked_on_find,
+                          Qt::CTRL + Qt::Key_F);
+    resetsrchact = new QAction("Сброс поиска", editing);
+    connect(resetsrchact, &QAction::triggered, this, &SellHistWindow::clicked_on_reset);
+    resetsrchact->setEnabled(false);
+    searchmenu->addAction(resetsrchact);
+    menubar->addMenu(searchmenu);
+
+    toolbar = new QToolBar(this);
+    toolbar->setStyleSheet("QToolBar { padding: 0; spacing: 5px; }");
+    saveact = new QAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton),
+                                "Сохранить", toolbar);
+    saveact->setShortcut(Qt::CTRL + Qt::Key_S);
+    saveact->setEnabled(false);
+    connect(saveact, &QAction::triggered, this, &SellHistWindow::clicked_on_submit);
+    toolbar->addAction(saveact);
+    revertact = new QAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton),
+                                "Отменить", toolbar);
+    revertact->setShortcut(Qt::CTRL + Qt::Key_R);
+    revertact->setEnabled(false);
+    connect(revertact, &QAction::triggered, this, &SellHistWindow::clicked_on_revert);
+    toolbar->addAction(revertact);
+    ui->verticalLayout->insertWidget(0, menubar);
+    ui->verticalLayout->insertWidget(1, toolbar);
+}
+
 // нажание на кнопку возврата назад
 void SellHistWindow::goback() {
     if (SEntity->isDirty()) {
-        QMessageBox::StandardButton resBtn = QMessageBox::question( this, "Возврат назад",
-                                                                    "В базу данных не внемены изменения. Отменить их и вернуться назад?\n",
-                                                                    QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
-                                                                    QMessageBox::No);
+        QMessageBox* msgBox = new QMessageBox("Возврат назад",
+                                              "В базу данных не внемены изменения."
+                                              "Отменить их и вернуться назад?\n",
+                                              QMessageBox::Question,
+                                              QMessageBox::Button::Yes,
+                                              QMessageBox::Button::No,
+                                              QMessageBox::Button::Cancel,
+                                              this);
+        int resBtn = msgBox->exec();
         if (resBtn == QMessageBox::Yes) {
             SEntity->revertAll();
             emit goback_signal(this);
@@ -93,7 +164,7 @@ void SellHistWindow::closeEvent(QCloseEvent *event) {
 }
 
 // переход к форме добавления записи
-void SellHistWindow::on_add_clicked() {
+void SellHistWindow::clicked_on_add() {
     qDebug() << fields;
     impl = QSharedPointer<Implement>(new AddSellImplement());
     QMap<QString, QString> titles = {{"title", "Добавить запись."}, {"exec", "Добавить"}};
@@ -143,34 +214,50 @@ void SellHistWindow::add_record_db(QSqlRecord* record) {
         qDebug() << SEntity->lastError();
     }
     //fields_names.clear();
-    ui->submit->setEnabled(true);
-    ui->revert->setEnabled(true);
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
 }
 
-// удаление выбранной строки
-void SellHistWindow::on_delete_selected_clicked() {
-    int selected_row = ui->table->currentIndex().row();
-    if (selected_row < 0) return;
-    QMessageBox::StandardButton resBtn =
-            QMessageBox::question(this, "Удаление",
-                                  "Удалить запись №" +
-                                  QString::number(SEntity->get_record(selected_row).field(0).value().toLongLong())
-                                  + "?\n",
-                                  QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
-                                  QMessageBox::No);
+// удаление выбранных строк
+void SellHistWindow::clicked_on_delete_selected() {
+    QItemSelectionModel* selection = ui->table->selectionModel();
+    QModelIndexList selection_list(selection->selectedIndexes());
+    if (selection_list.isEmpty()) return;
+
+    QMessageBox* msgBox = new QMessageBox("Удаление",
+                                          "",
+                                          QMessageBox::Question,
+                                          QMessageBox::Button::Yes,
+                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Cancel,
+                                          this);
+    int resBtn = 0;
+
+    // Быстрая проверка на то, что размер массива равен 1
+    if (selection_list.cbegin() == --selection_list.cend()) {
+        msgBox->setText("Удалить запись №" +
+                        QString::number(
+                            SEntity->get_record(selection_list.at(0).row()).field(0).value().toLongLong())
+                        + "?\n");
+    }
+    else {
+        msgBox->setText("Удалить выделенные записи?\n");
+    }
+    resBtn = msgBox->exec();
     if (resBtn != QMessageBox::Yes) {
         return;
     }
     else {
-        qDebug() << "DEL ROW &" << this->SEntity->removeRecord(selected_row);
-        ui->submit->setEnabled(true);
-        ui->revert->setEnabled(true);
+        for (QModelIndex& index : selection_list) {
+            SEntity->removeRecord(index.row());
+        }
+        saveact->setEnabled(true);
+        revertact->setEnabled(true);
     }
-    //if (ui->table->)
 }
 
 // подтверждение изменений в таблице
-void SellHistWindow::on_submit_clicked() {
+void SellHistWindow::clicked_on_submit() {
     if (!SEntity->submitAll()) {
         qDebug() << SEntity->lastError();
     }
@@ -184,21 +271,21 @@ void SellHistWindow::on_submit_clicked() {
                 }
             }
         }
-        ui->revert->setEnabled(false);
-        ui->submit->setEnabled(false);
+        revertact->setEnabled(false);
+        saveact->setEnabled(false);
     }
 }
 
 // отмена изменений в таблице
-void SellHistWindow::on_revert_clicked() {
+void SellHistWindow::clicked_on_revert() {
     temp_sales.clear();
-    ui->revert->setEnabled(false);
-    ui->submit->setEnabled(false);
+    revertact->setEnabled(false);
+    saveact->setEnabled(false);
     SEntity->revertAll();
 }
 
 // переход к форме поиска записи
-void SellHistWindow::on_find_clicked() {
+void SellHistWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindSellImplement());
     QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
     InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
@@ -211,34 +298,38 @@ void SellHistWindow::on_find_clicked() {
 void SellHistWindow::find_record_db(QString& where) {
     qDebug() << where;
     SEntity->setFilter(where);
-    ui->reset->setEnabled(true);
+    resetsrchact->setEnabled(true);
     if (SEntity->rowCount() == 0) {
         QMessageBox::warning(this, "Ошибка!",
                              "По заданному запросу ничего не найдено!");
     }
     else {
         InFAbs->goback();
-        ui->delete_found->setEnabled(true);
+        delfoundact->setEnabled(true);
     }
 }
 
 // отмена изменений в таблице
-void SellHistWindow::on_reset_clicked(){
+void SellHistWindow::clicked_on_reset(){
     SEntity->setFilter("");
     if (SEntity->rowCount() == 0) {
         SEntity->select();
     }
-    ui->reset->setEnabled(false);
-    ui->delete_found->setEnabled(false);
+    resetsrchact->setEnabled(false);
+    delfoundact->setEnabled(false);
 }
 
 // удаление всех найденных записей
-void SellHistWindow::on_delete_found_clicked() {
+void SellHistWindow::clicked_on_delete_found() {
     if (SEntity->filter() == "") return;
-    QMessageBox::StandardButton resBtn = QMessageBox::question( this, "Удаление найденных.",
-                                                                "Удалить все найденные записи?\n",
-                                                                QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
-                                                                QMessageBox::Yes);
+    QMessageBox* msgBox = new QMessageBox("Удаление найденных",
+                                          "Удалить все найденные записи?\n",
+                                          QMessageBox::Question,
+                                          QMessageBox::Button::Yes,
+                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Cancel,
+                                          this);
+    int resBtn = msgBox->exec();
     qDebug() << SEntity->rowCount();
     //model->
     if (resBtn == QMessageBox::Yes) {
@@ -246,8 +337,12 @@ void SellHistWindow::on_delete_found_clicked() {
         QMessageBox::information(this, "Успех!",
                              "Все найденные записи помечены на удаление. "
                              "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
-        ui->submit->setEnabled(true);
-        ui->revert->setEnabled(true);
+        saveact->setEnabled(true);
+        revertact->setEnabled(true);
     }
+}
+
+void SellHistWindow::enable_deleting() {
+    delselact->setEnabled(true);
 }
 
