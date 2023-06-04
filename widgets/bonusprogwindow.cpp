@@ -8,7 +8,7 @@
 
 BonusProgWindow::BonusProgWindow(QWidget *parent,
                                   BonusEntity* BEntity) :
-    aChildWin(parent),
+    DBWindow(parent),
     ui(new Ui::BonusProgWindow)
 {
     qDebug() << "CRT bonus";
@@ -29,6 +29,8 @@ BonusProgWindow::BonusProgWindow(QWidget *parent,
 
     QVector<QString> temp = entity->get_fnames();
     init_table();
+    ui->verticalLayout->insertWidget(0, menubar);
+    ui->verticalLayout->insertWidget(1, toolbar);
     for (int i = 0; i < entity->get_model()->record().count(); i++) {
         keys.append(entity->get_model()->record().fieldName(i));
         fields.insert(keys[i], temp[i]);
@@ -91,74 +93,17 @@ void BonusProgWindow::init_table() {
     ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
-void BonusProgWindow::init_menubar() {
-    menubar = new QMenuBar(this);
-    QFont font = menubar->font();
-    font.setPointSize(11);
-    menubar->setFont(font);
-    backact = new QAction(this->style()->standardIcon(QStyle::SP_ArrowLeft),
-                                "",
-                                menubar);
-    backact->setShortcut(Qt::CTRL + Qt::Key_Left);
+void BonusProgWindow::connect_menu() {
     connect(backact, &QAction::triggered, this, &BonusProgWindow::goback);
-    menubar->addAction(backact);
-    progmenu = new QMenu("Программа", menubar);
-    progmenu->addAction("Настройки");
-    //progmenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCloseButton),
-    //                    "Выход",
-    //                    this,
-    //                    &BonusProgWindow::closem,
-    //                    Qt::CTRL + Qt::Key_Q);
-    menubar->addMenu(progmenu);
-    editing = new QMenu("Правка", menubar);
-    editing->addAction("Добавить",
-                       this,
-                       &BonusProgWindow::clicked_on_add);
-    delselact = new QAction("Удалить", editing);
-    delselact->setShortcut(Qt::Key_Delete);
-    connect(ui->table, &QTableView::pressed, this, &BonusProgWindow::enable_deleting);
-    connect(delselact, &QAction::triggered, this, &BonusProgWindow::clicked_on_delete_selected);
-    delselact->setEnabled(false);
-    editing->addAction(delselact);
-    editact = new QAction("Изменить", editing);
-    //editact->setShortcut(Qt::Key_Delete);
+    connect(addact, &QAction::triggered, this, &BonusProgWindow::clicked_on_add);
     connect(ui->table, &QTableView::pressed, this, &BonusProgWindow::enable_rows_operations);
+    connect(delselact, &QAction::triggered, this, &BonusProgWindow::clicked_on_delete_selected);
     connect(editact, &QAction::triggered, this, &BonusProgWindow::clicked_on_edit);
-    editact->setEnabled(false);
-    editing->addAction(editact);
-    delfoundact = new QAction("Удалить найденные", editing);
     connect(delfoundact, &QAction::triggered, this, &BonusProgWindow::clicked_on_delete_found);
-    delfoundact->setEnabled(false);
-    editing->addAction(delfoundact);
-    menubar->addMenu(editing);
-
-    searchmenu = new QMenu("Поиск", menubar);
-    searchmenu->addAction("Поиск",
-                          this,
-                          &BonusProgWindow::clicked_on_find,
-                          Qt::CTRL + Qt::Key_F);
-    resetsrchact = new QAction("Сброс поиска", editing);
+    connect(searchact, &QAction::triggered, this, &BonusProgWindow::clicked_on_find);
     connect(resetsrchact, &QAction::triggered, this, &BonusProgWindow::clicked_on_reset);
-    resetsrchact->setEnabled(false);
-    searchmenu->addAction(resetsrchact);
-    menubar->addMenu(searchmenu);
-
-    toolbar = new QToolBar(this);
-    toolbar->setStyleSheet("QToolBar { padding: 0; spacing: 5px; }");
-    saveact = new QAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton),
-                                "Сохранить", toolbar);
-    saveact->setShortcut(Qt::CTRL + Qt::Key_S);
-    saveact->setEnabled(false);
     connect(saveact, &QAction::triggered, this, &BonusProgWindow::clicked_on_submit);
-    toolbar->addAction(saveact);
-    revertact = new QAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton),
-                                "Отменить", toolbar);
-    revertact->setShortcut(Qt::CTRL + Qt::Key_R);
-    revertact->setEnabled(false);
     connect(revertact, &QAction::triggered, this, &BonusProgWindow::clicked_on_revert);
-    toolbar->addAction(revertact);
-    ui->verticalLayout->insertWidget(0, menubar);
-    ui->verticalLayout->insertWidget(1, toolbar);
 }
 
 // переход к форме добавления записи
@@ -251,11 +196,6 @@ void BonusProgWindow::find_record_db(const QString& where) {
     }
 }
 
-void BonusProgWindow::enable_rows_operations() {
-    delselact->setEnabled(true);
-    editact->setEnabled(true);
-}
-
 // удаление выбранной строки
 void BonusProgWindow::clicked_on_delete_selected() {
     QItemSelectionModel* selection = ui->table->selectionModel();
@@ -343,9 +283,5 @@ void BonusProgWindow::clicked_on_revert() {
     revertact->setEnabled(false);
     saveact->setEnabled(false);
     entity->revertAll();
-}
-
-void BonusProgWindow::enable_deleting() {
-    delselact->setEnabled(true);
 }
 

@@ -8,7 +8,7 @@
 #include <QToolBar>
 
 MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
-    aChildWin(parent),
+    DBWindow(parent),
     ui(new Ui::MedicinesWindow)
 {
     qDebug() << "CRT medics";
@@ -21,6 +21,8 @@ MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
     setAttribute(Qt::WA_DeleteOnClose);
     ui->verticalLayout->setSpacing(1);
     init_menubar();
+    ui->verticalLayout->insertWidget(0, menubar);
+    ui->verticalLayout->insertWidget(1, toolbar);
 
     QVector<QString> temp = entity->get_fnames();
     // загрузка модели в виджет QTableView
@@ -70,74 +72,17 @@ void MedicinesWindow::init_table() {
     ui->table->setColumnWidth(0, 20);
 }
 
-void MedicinesWindow::init_menubar() {
-    menubar = new QMenuBar(this);
-    QFont font = menubar->font();
-    font.setPointSize(11);
-    menubar->setFont(font);
-    backact = new QAction(this->style()->standardIcon(QStyle::SP_ArrowLeft),
-                                "",
-                                menubar);
-    backact->setShortcut(Qt::CTRL + Qt::Key_Left);
+void MedicinesWindow::connect_menu() {
     connect(backact, &QAction::triggered, this, &MedicinesWindow::goback);
-    menubar->addAction(backact);
-    progmenu = new QMenu("Программа", menubar);
-    progmenu->addAction("Настройки");
-    //progmenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCloseButton),
-    //                    "Выход",
-    //                    this,
-    //                    &MedicinesWindow::closem,
-    //                    Qt::CTRL + Qt::Key_Q);
-    menubar->addMenu(progmenu);
-    editing = new QMenu("Правка", menubar);
-    editing->addAction("Добавить",
-                       this,
-                       &MedicinesWindow::clicked_on_add);
-    delselact = new QAction("Удалить", editing);
-    delselact->setShortcut(Qt::Key_Delete);
+    connect(addact, &QAction::triggered, this, &MedicinesWindow::clicked_on_add);
     connect(ui->table, &QTableView::pressed, this, &MedicinesWindow::enable_rows_operations);
     connect(delselact, &QAction::triggered, this, &MedicinesWindow::clicked_on_delete_selected);
-    delselact->setEnabled(false);
-    editing->addAction(delselact);
-    editact = new QAction("Изменить", editing);
-    //editact->setShortcut(Qt::Key_Delete);
-    connect(ui->table, &QTableView::pressed, this, &MedicinesWindow::enable_rows_operations);
     connect(editact, &QAction::triggered, this, &MedicinesWindow::clicked_on_edit);
-    editact->setEnabled(false);
-    editing->addAction(editact);
-    delfoundact = new QAction("Удалить найденные", editing);
     connect(delfoundact, &QAction::triggered, this, &MedicinesWindow::clicked_on_delete_found);
-    delfoundact->setEnabled(false);
-    editing->addAction(delfoundact);
-    menubar->addMenu(editing);
-
-    searchmenu = new QMenu("Поиск", menubar);
-    searchmenu->addAction("Поиск",
-                          this,
-                          &MedicinesWindow::clicked_on_find,
-                          Qt::CTRL + Qt::Key_F);
-    resetsrchact = new QAction("Сброс поиска", editing);
+    connect(searchact, &QAction::triggered, this, &MedicinesWindow::clicked_on_find);
     connect(resetsrchact, &QAction::triggered, this, &MedicinesWindow::clicked_on_reset);
-    resetsrchact->setEnabled(false);
-    searchmenu->addAction(resetsrchact);
-    menubar->addMenu(searchmenu);
-
-    toolbar = new QToolBar(this);
-    toolbar->setStyleSheet("QToolBar { padding: 0; spacing: 5px; }");
-    saveact = new QAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton),
-                                "Сохранить", toolbar);
-    saveact->setShortcut(Qt::CTRL + Qt::Key_S);
-    saveact->setEnabled(false);
     connect(saveact, &QAction::triggered, this, &MedicinesWindow::clicked_on_submit);
-    toolbar->addAction(saveact);
-    revertact = new QAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton),
-                                "Отменить", toolbar);
-    revertact->setShortcut(Qt::CTRL + Qt::Key_R);
-    revertact->setEnabled(false);
     connect(revertact, &QAction::triggered, this, &MedicinesWindow::clicked_on_revert);
-    toolbar->addAction(revertact);
-    ui->verticalLayout->insertWidget(0, menubar);
-    ui->verticalLayout->insertWidget(1, toolbar);
 }
 
 //void MedicinesWindow::closem() {
@@ -200,7 +145,6 @@ void MedicinesWindow::add_record_db(const QSqlRecord* record) {
     //fields_names.clear();
     saveact->setEnabled(true);
     revertact->setEnabled(true);
-
 }
 
 // удаление выбранных строк
@@ -306,7 +250,7 @@ void MedicinesWindow::find_record_db(const QString& where) {
 void MedicinesWindow::edit_record_db(const QSqlRecord& record, const int row) {
     if (entity->setRecord(row, record)) {
         QMessageBox::information(this, "Успех!",
-                             "Введённая запись добавлена в временное представление таблицы базы данных. "
+                             "Введённая запись отредактирована. "
                              "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
     }
     else {
@@ -350,8 +294,4 @@ void MedicinesWindow::clicked_on_delete_found() {
     }
 }
 
-void MedicinesWindow::enable_rows_operations() {
-    delselact->setEnabled(true);
-    editact->setEnabled(true);
-}
 
