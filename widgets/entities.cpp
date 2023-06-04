@@ -80,6 +80,10 @@ bool Entity::removeRecords(const int s, const int e) {
     return model->removeRows(s, e);
 }
 
+bool Entity::setRecord(const int row, const QSqlRecord& record){
+    return model->setRecord(row, record);
+}
+
 // отменить все изменения
 void Entity::revertAll() {
     model->revertAll();

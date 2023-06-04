@@ -97,10 +97,16 @@ void SellHistWindow::init_menubar() {
                        &SellHistWindow::clicked_on_add);
     delselact = new QAction("Удалить", editing);
     delselact->setShortcut(Qt::Key_Delete);
-    connect(ui->table, &QTableView::pressed, this, &SellHistWindow::enable_deleting);
+    connect(ui->table, &QTableView::pressed, this, &SellHistWindow::enable_rows_operations);
     connect(delselact, &QAction::triggered, this, &SellHistWindow::clicked_on_delete_selected);
     delselact->setEnabled(false);
     editing->addAction(delselact);
+    editact = new QAction("Изменить", editing);
+    //editact->setShortcut(Qt::Key_Delete);
+    connect(ui->table, &QTableView::pressed, this, &SellHistWindow::enable_rows_operations);
+    connect(editact, &QAction::triggered, this, &SellHistWindow::clicked_on_edit);
+    editact->setEnabled(false);
+    editing->addAction(editact);
     delfoundact = new QAction("Удалить найденные", editing);
     connect(delfoundact, &QAction::triggered, this, &SellHistWindow::clicked_on_delete_found);
     delfoundact->setEnabled(false);
@@ -170,13 +176,16 @@ void SellHistWindow::clicked_on_add() {
     QMap<QString, QString> titles = {{"title", "Добавить запись."}, {"exec", "Добавить"}};
     InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
     titles.clear();
-    connect(impl.get(), QOverload<QSqlRecord*>::of(&Implement::exec_clicked_signal), this, &SellHistWindow::add_record_db);
+    connect(impl.get(),
+            QOverload<const QSqlRecord*>::of(&Implement::exec_clicked_signal),
+            this,
+            &SellHistWindow::add_record_db);
     impl.reset();
     emit summoned_child(InFAbs);
 }
 
 // добавление записи
-void SellHistWindow::add_record_db(QSqlRecord* record) {
+void SellHistWindow::add_record_db(const QSqlRecord* record) {
     int med_id = record->value(keys[3]).toInt();
     int sell_count = record->value(keys[4]).toInt();
 
@@ -256,6 +265,23 @@ void SellHistWindow::clicked_on_delete_selected() {
     }
 }
 
+void SellHistWindow::clicked_on_edit() {
+    impl = QSharedPointer<Implement>(new EditSellImplement());
+    QItemSelectionModel* selection = ui->table->selectionModel();
+    int row = selection->selectedIndexes().at(0).row();
+    QSqlRecord record = SEntity->get_record(row);
+    QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
+    InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
+    InFAbs->fill_fields(record, row);
+    titles.clear();
+    connect(impl.get(),
+            QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
+            this,
+            &SellHistWindow::edit_record_db);
+    impl.reset();
+    emit summoned_child(InFAbs);
+}
+
 // подтверждение изменений в таблице
 void SellHistWindow::clicked_on_submit() {
     if (!SEntity->submitAll()) {
@@ -289,13 +315,16 @@ void SellHistWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindSellImplement());
     QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
     InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
-    connect(impl.get(), QOverload<QString&>::of(&Implement::exec_clicked_signal), this, &SellHistWindow::find_record_db);
+    connect(impl.get(),
+            QOverload<const QString&>::of(&Implement::exec_clicked_signal),
+            this,
+            &SellHistWindow::find_record_db);
     impl.reset();
     emit summoned_child(InFAbs);
 }
 
 // установка фильтра по введённым данным в поля
-void SellHistWindow::find_record_db(QString& where) {
+void SellHistWindow::find_record_db(const QString& where) {
     qDebug() << where;
     SEntity->setFilter(where);
     resetsrchact->setEnabled(true);
@@ -307,6 +336,21 @@ void SellHistWindow::find_record_db(QString& where) {
         InFAbs->goback();
         delfoundact->setEnabled(true);
     }
+}
+
+void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
+    if (SEntity->setRecord(row, record)) {
+        QMessageBox::information(this, "Успех!",
+                             "Введённая запись добавлена в временное представление таблицы базы данных. "
+                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+    }
+    else {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Ошибка добвления записи в таблицу!");
+    }
+    //fields_names.clear();
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
 }
 
 // отмена изменений в таблице
@@ -342,7 +386,9 @@ void SellHistWindow::clicked_on_delete_found() {
     }
 }
 
-void SellHistWindow::enable_deleting() {
+void SellHistWindow::enable_rows_operations() {
     delselact->setEnabled(true);
+    editact->setEnabled(true);
 }
+
 

@@ -47,6 +47,7 @@ public:
                          const QMap<QString, QString>& fields,
                          const QVector<QString>& keys);
     virtual ~inputFields();
+    virtual void fill_fields(const QSqlRecord&, const int) = 0;
     void goback() override;
 };
 
@@ -63,7 +64,8 @@ private:
     QLineEdit* pieces;
     QHBoxLayout* hlay;
 
-
+    // номер изменяемой строки при соответствующей операции
+    int row;
     void exec_clicked() override;
     // Формирование построчно нужных полей для ввода
     void produceField1();
@@ -74,9 +76,11 @@ private:
     void produceField6();
     // добавления кнопки назад и кнопки совершения операции
     void finalization();
+    void fill_fields(const QSqlRecord&, const int) override;
 
     friend class AddMedsImplement;
     friend class FindMedsImplement;
+    friend class EditMedsImplement;
 public:
     explicit MedsAbstr(const QMap<QString, QString>& titles,
                         const QMap<QString, QString>& fields,
@@ -95,14 +99,17 @@ private:
     QLineEdit* bonus_amount;
     QHBoxLayout* hlay;
 
+    int row;
     void exec_clicked() override;
     void produceField1();
     void produceField2();
     void produceField3();
     void finalization();
+    void fill_fields(const QSqlRecord&, const int) override;
 
     friend class AddBonusImplement;
     friend class FindBonusImplement;
+    friend class EditBonusImplement;
 public:
     explicit BonusAbstr(const QMap<QString, QString>& titles,
                         const QMap<QString, QString>& fields,
@@ -123,6 +130,7 @@ private:
     QHBoxLayout* hlay;
     const SellEntity* entity;
 
+    int row;
     void exec_clicked() override;
     void produceField1();
     void produceField2();
@@ -130,9 +138,11 @@ private:
     void produceField4();
     void finalization();
     void med_changed(int);
+    void fill_fields(const QSqlRecord&, const int) override;
 
     friend class AddSellImplement;
     friend class FindSellImplement;
+    friend class EditSellImplement;
 public:
     explicit SellAbstr(const QMap<QString, QString>& titles,
                         const QMap<QString, QString>& fields,
@@ -151,17 +161,18 @@ class Implement : public QObject {
 Q_OBJECT
 public:
     virtual ~Implement() { qDebug() << "del Impl"; }
-    virtual QString processField(inputFields*) = 0;
+    virtual QString processFields(inputFields*) = 0;
 signals:
-    void exec_clicked_signal(QSqlRecord*);
-    void exec_clicked_signal(QString&);
+    void exec_clicked_signal(const QSqlRecord*);
+    void exec_clicked_signal(const QString&);
+    void exec_clicked_signal(const QSqlRecord&, const int);
 };
 
 // конкретный обработчик полей формы(реализация)
 class AddMedsImplement : public Implement {
 Q_OBJECT
 public:
-    QString processField(inputFields*) override;
+    QString processFields(inputFields*) override;
 
 };
 
@@ -169,7 +180,14 @@ public:
 class FindMedsImplement : public Implement {
 Q_OBJECT
 public:
-    QString processField(inputFields*) override;
+    QString processFields(inputFields*) override;
+};
+
+// конкретный обработчик полей формы(реализация)
+class EditMedsImplement : public Implement {
+Q_OBJECT
+public:
+    QString processFields(inputFields*) override;
 };
 
 // конкретный обработчик полей формы(реализация)
@@ -177,7 +195,7 @@ class AddBonusImplement : public Implement {
 Q_OBJECT
 public:
     AddBonusImplement() {};
-    QString processField(inputFields*) override;
+    QString processFields(inputFields*) override;
 };
 
 // конкретный обработчик полей формы(реализация)
@@ -185,7 +203,14 @@ class FindBonusImplement : public Implement {
 Q_OBJECT
 public:
     FindBonusImplement() {};
-    QString processField(inputFields*) override;
+    QString processFields(inputFields*) override;
+};
+
+// конкретный обработчик полей формы(реализация)
+class EditBonusImplement : public Implement {
+Q_OBJECT
+public:
+    QString processFields(inputFields*) override;
 };
 
 // конкретный обработчик полей формы(реализация)
@@ -193,7 +218,7 @@ class AddSellImplement : public Implement {
 Q_OBJECT
 public:
     AddSellImplement() {};
-    QString processField(inputFields*) override;
+    QString processFields(inputFields*) override;
 };
 
 // конкретный обработчик полей формы(реализация)
@@ -201,7 +226,14 @@ class FindSellImplement : public Implement {
 Q_OBJECT
 public:
     FindSellImplement() {};
-    QString processField(inputFields*) override;
+    QString processFields(inputFields*) override;
+};
+
+// конкретный обработчик полей формы(реализация)
+class EditSellImplement : public Implement {
+Q_OBJECT
+public:
+    QString processFields(inputFields*) override;
 };
 
 #endif // INPUTFIELDS_H

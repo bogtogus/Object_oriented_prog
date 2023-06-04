@@ -95,10 +95,16 @@ void MedicinesWindow::init_menubar() {
                        &MedicinesWindow::clicked_on_add);
     delselact = new QAction("Удалить", editing);
     delselact->setShortcut(Qt::Key_Delete);
-    connect(ui->table, &QTableView::pressed, this, &MedicinesWindow::enable_deleting);
+    connect(ui->table, &QTableView::pressed, this, &MedicinesWindow::enable_rows_operations);
     connect(delselact, &QAction::triggered, this, &MedicinesWindow::clicked_on_delete_selected);
     delselact->setEnabled(false);
     editing->addAction(delselact);
+    editact = new QAction("Изменить", editing);
+    //editact->setShortcut(Qt::Key_Delete);
+    connect(ui->table, &QTableView::pressed, this, &MedicinesWindow::enable_rows_operations);
+    connect(editact, &QAction::triggered, this, &MedicinesWindow::clicked_on_edit);
+    editact->setEnabled(false);
+    editing->addAction(editact);
     delfoundact = new QAction("Удалить найденные", editing);
     connect(delfoundact, &QAction::triggered, this, &MedicinesWindow::clicked_on_delete_found);
     delfoundact->setEnabled(false);
@@ -172,13 +178,16 @@ void MedicinesWindow::clicked_on_add() {
     QMap<QString, QString> titles = {{"title", "Добавить запись."}, {"exec", "Добавить"}};
     InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
     titles.clear();
-    connect(impl.get(), QOverload<QSqlRecord*>::of(&Implement::exec_clicked_signal), this, &MedicinesWindow::add_record_db);
+    connect(impl.get(),
+            QOverload<const QSqlRecord*>::of(&Implement::exec_clicked_signal),
+            this,
+            &MedicinesWindow::add_record_db);
     impl.reset();
     emit summoned_child(InFAbs);
 }
 
 // добавление записи
-void MedicinesWindow::add_record_db(QSqlRecord* record) {
+void MedicinesWindow::add_record_db(const QSqlRecord* record) {
     if (entity->addRecord(record)) {
         QMessageBox::information(this, "Успех!",
                              "Введённая запись добавлена в временное представление таблицы базы данных. "
@@ -212,8 +221,7 @@ void MedicinesWindow::clicked_on_delete_selected() {
     // Быстрая проверка на то, что размер массива равен 1
     if (selection_list.cbegin() == --selection_list.cend()) {
         msgBox->setText("Удалить запись №" +
-                        QString::number(
-                            entity->get_record(selection_list.at(0).row()).field(0).value().toLongLong())
+                        entity->get_record(selection_list.at(0).row()).field(0).value().toString()
                         + "?\n");
     }
     else {
@@ -230,6 +238,23 @@ void MedicinesWindow::clicked_on_delete_selected() {
         saveact->setEnabled(true);
         revertact->setEnabled(true);
     }
+}
+
+void MedicinesWindow::clicked_on_edit() {
+    impl = QSharedPointer<Implement>(new EditMedsImplement());
+    QItemSelectionModel* selection = ui->table->selectionModel();
+    int row = selection->selectedIndexes().at(0).row();
+    QSqlRecord record = entity->get_record(row);
+    QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
+    InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
+    InFAbs->fill_fields(record, row);
+    titles.clear();
+    connect(impl.get(),
+            QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
+            this,
+            &MedicinesWindow::edit_record_db);
+    impl.reset();
+    emit summoned_child(InFAbs);
 }
 
 // подтверждение изменений в таблице
@@ -255,13 +280,16 @@ void MedicinesWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindMedsImplement());
     QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
     InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
-    connect(impl.get(), QOverload<QString&>::of(&Implement::exec_clicked_signal), this, &MedicinesWindow::find_record_db);
+    connect(impl.get(),
+            QOverload<const QString&>::of(&Implement::exec_clicked_signal),
+            this,
+            &MedicinesWindow::find_record_db);
     impl.reset();
     emit summoned_child(InFAbs);
 }
 
 // установка фильтра по введённым данным в поля
-void MedicinesWindow::find_record_db(QString& where) {
+void MedicinesWindow::find_record_db(const QString& where) {
     qDebug() << where;
     entity->setFilter(where);
     resetsrchact->setEnabled(true);
@@ -273,6 +301,21 @@ void MedicinesWindow::find_record_db(QString& where) {
         InFAbs->goback();
         delfoundact->setEnabled(true);
     }
+}
+
+void MedicinesWindow::edit_record_db(const QSqlRecord& record, const int row) {
+    if (entity->setRecord(row, record)) {
+        QMessageBox::information(this, "Успех!",
+                             "Введённая запись добавлена в временное представление таблицы базы данных. "
+                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+    }
+    else {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Ошибка добвления записи в таблицу!");
+    }
+    //fields_names.clear();
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
 }
 
 // отмена изменений в таблице
@@ -307,7 +350,8 @@ void MedicinesWindow::clicked_on_delete_found() {
     }
 }
 
-void MedicinesWindow::enable_deleting() {
+void MedicinesWindow::enable_rows_operations() {
     delselact->setEnabled(true);
+    editact->setEnabled(true);
 }
 

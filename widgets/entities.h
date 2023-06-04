@@ -34,6 +34,7 @@ public:
     bool addRecord(const QSqlRecord*);
     bool removeRecord(const int id);
     bool removeRecords(const int start, const int length);
+    bool setRecord(const int, const QSqlRecord&);
     void setFilter(const QString& filter);
     void revertAll();
     bool submitAll();

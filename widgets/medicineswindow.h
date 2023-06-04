@@ -32,6 +32,7 @@ private:
     QAction* revertact;
     QAction* delselact;
     QAction* delfoundact;
+    QAction* editact;
     QAction* resetsrchact;
 
     // объект, взаимодействующий с таблицей лекарств в БД
@@ -46,8 +47,9 @@ private:
     // Обработчик данных в окне ввода данных
     QSharedPointer<Implement> impl;
 
-    void add_record_db(QSqlRecord*);
-    void find_record_db(QString&);
+    void add_record_db(const QSqlRecord*);
+    void find_record_db(const QString&);
+    void edit_record_db(const QSqlRecord&, const int);
     void init_table();
     void init_menubar();
     //void closem();
@@ -56,12 +58,13 @@ private slots:
     void resizeEvent(QResizeEvent *event) override;
     void clicked_on_add();
     void clicked_on_delete_selected();
+    void clicked_on_edit();
     void clicked_on_submit();
     void clicked_on_revert();
     void clicked_on_find();
     void clicked_on_reset();
     void clicked_on_delete_found();
-    void enable_deleting();
+    void enable_rows_operations();
 };
 
 #endif // MEDICINESWINDOW_H

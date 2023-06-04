@@ -120,6 +120,12 @@ void BonusProgWindow::init_menubar() {
     connect(delselact, &QAction::triggered, this, &BonusProgWindow::clicked_on_delete_selected);
     delselact->setEnabled(false);
     editing->addAction(delselact);
+    editact = new QAction("Изменить", editing);
+    //editact->setShortcut(Qt::Key_Delete);
+    connect(ui->table, &QTableView::pressed, this, &BonusProgWindow::enable_rows_operations);
+    connect(editact, &QAction::triggered, this, &BonusProgWindow::clicked_on_edit);
+    editact->setEnabled(false);
+    editing->addAction(editact);
     delfoundact = new QAction("Удалить найденные", editing);
     connect(delfoundact, &QAction::triggered, this, &BonusProgWindow::clicked_on_delete_found);
     delfoundact->setEnabled(false);
@@ -156,10 +162,25 @@ void BonusProgWindow::init_menubar() {
 }
 
 // переход к форме добавления записи
-void BonusProgWindow::add_record_db(QSqlRecord* record) {
+void BonusProgWindow::add_record_db(const QSqlRecord* record) {
     if (entity->addRecord(record)) {
         QMessageBox::information(this, "Успех!",
                              "Введённая запись добавлена в временное представление таблицы базы данных. "
+                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+    }
+    else {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Ошибка добвления записи в таблицу!");
+    }
+    //fields_names.clear();
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
+}
+
+void BonusProgWindow::edit_record_db(const QSqlRecord & record, const int row) {
+    if (entity->setRecord(row, record)) {
+        QMessageBox::information(this, "Успех!",
+                             "Введённая запись отредактирована. "
                              "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
     }
     else {
@@ -177,7 +198,27 @@ void BonusProgWindow::clicked_on_add() {
     QMap<QString, QString> titles = {{"title", "Добавить бонусную карту."}, {"exec", "Добавить"}};
     InFAbs = new BonusAbstr(titles, fields, keys, impl, this);
     titles.clear();
-    connect(impl.get(), QOverload<QSqlRecord*>::of(&Implement::exec_clicked_signal), this, &BonusProgWindow::add_record_db);
+    connect(impl.get(),
+            QOverload<const QSqlRecord*>::of(&Implement::exec_clicked_signal),
+            this,
+            &BonusProgWindow::add_record_db);
+    impl.reset();
+    emit summoned_child(InFAbs);
+}
+
+void BonusProgWindow::clicked_on_edit() {
+    impl = QSharedPointer<Implement>(new EditBonusImplement());
+    QItemSelectionModel* selection = ui->table->selectionModel();
+    int row = selection->selectedIndexes().at(0).row();
+    QSqlRecord record = entity->get_record(row);
+    QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
+    InFAbs = new BonusAbstr(titles, fields, keys, impl, this);
+    InFAbs->fill_fields(record, row);
+    titles.clear();
+    connect(impl.get(),
+            QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
+            this,
+            &BonusProgWindow::edit_record_db);
     impl.reset();
     emit summoned_child(InFAbs);
 }
@@ -187,13 +228,16 @@ void BonusProgWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindBonusImplement());
     QMap<QString, QString> titles = {{"title", "Найти бонусную карту."}, {"exec", "Найти"}};
     InFAbs = new BonusAbstr(titles, fields, keys, impl, this);
-    connect(impl.get(), QOverload<QString&>::of(&Implement::exec_clicked_signal), this, &BonusProgWindow::find_record_db);
+    connect(impl.get(),
+            QOverload<const QString&>::of(&Implement::exec_clicked_signal),
+            this,
+            &BonusProgWindow::find_record_db);
     impl.reset();
     emit summoned_child(InFAbs);
 }
 
 // установка фильтра по введённым данным в поля
-void BonusProgWindow::find_record_db(QString& where) {
+void BonusProgWindow::find_record_db(const QString& where) {
     qDebug() << where;
     entity->setFilter(where);
     resetsrchact->setEnabled(true);
@@ -205,6 +249,11 @@ void BonusProgWindow::find_record_db(QString& where) {
         InFAbs->goback();
         delfoundact->setEnabled(true);
     }
+}
+
+void BonusProgWindow::enable_rows_operations() {
+    delselact->setEnabled(true);
+    editact->setEnabled(true);
 }
 
 // удаление выбранной строки

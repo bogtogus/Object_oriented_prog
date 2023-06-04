@@ -58,6 +58,7 @@ MedsAbstr::MedsAbstr(const QMap<QString, QString>& titles,
                        QSharedPointer<Implement> impl,
                        QWidget* parent) : inputFields(parent, titles, fields, keys) {
     this->impl = impl;
+    row = -1;
     buildLayout();
     produceField1();
     produceField2();
@@ -78,7 +79,7 @@ MedsAbstr::~MedsAbstr() {
 void MedsAbstr::exec_clicked() {
     // если нет ошибок, то объект реализации внутри
     // себя вызвал сигнал с нужным объектом
-    QString error = impl->processField(this);
+    QString error = impl->processFields(this);
     if (!error.isEmpty()) {
         QMessageBox::warning(this, "Ошибка!", error);
     }
@@ -193,8 +194,18 @@ void MedsAbstr::finalization() {
     vlay->addItem(hlay);
 }
 
+void MedsAbstr::fill_fields(const QSqlRecord & record, const int row) {
+    manufactorer->setText(record.field(keys[1]).value().toString());
+    name->setText(record.field(keys[2]).value().toString());
+    date_of_manuf->setText(record.field(keys[3]).value().toString());
+    expiry_date->setText(record.field(keys[4]).value().toString());
+    on_prescription->setChecked(record.field(keys[5]).value().toBool());
+    pieces->setText(record.field(keys[6]).value().toString());
+    this->row = row;
+}
+
 // Реализация для окна ввода данных для добавления в таблицу
-QString AddMedsImplement::processField(inputFields* abs) {
+QString AddMedsImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     MedsAbstr* concreteAbs = qobject_cast<MedsAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
@@ -246,7 +257,7 @@ QString AddMedsImplement::processField(inputFields* abs) {
 
 
 // Реализация для окна ввода данных для поиска в таблице
-QString FindMedsImplement::processField(inputFields * abs) {
+QString FindMedsImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     MedsAbstr* concreteAbs = qobject_cast<MedsAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
@@ -286,6 +297,55 @@ QString FindMedsImplement::processField(inputFields * abs) {
     return NULL;
 }
 
+QString EditMedsImplement::processFields(inputFields* abs) {
+    if (abs == nullptr) return "Undefined";
+    MedsAbstr* concreteAbs = qobject_cast<MedsAbstr*>(abs);
+    if (concreteAbs == nullptr) return "Undefined";
+    if (concreteAbs->manufactorer->text().length() < 3) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->manufactorer->objectName()] +
+                             "\"!";
+    }
+    else if (concreteAbs->name->text().length() < 3) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->name->objectName()] +
+                             "\"!";
+    }
+    else if (!concreteAbs->date_of_manuf->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->date_of_manuf->objectName()] +
+                             "\"!";
+    }
+    else if (!concreteAbs->expiry_date->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->expiry_date->objectName()] +
+                             "\"!";
+    }
+    else if (concreteAbs->pieces->text().isEmpty() ||
+            !concreteAbs->pieces->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->pieces->objectName()] +
+                             "\"!";
+    }
+    else {
+        QSqlRecord* rec = new QSqlRecord();
+        rec->append(QSqlField(concreteAbs->keys[1]));
+        rec->setValue(concreteAbs->keys[1], concreteAbs->manufactorer->text());
+        rec->append(QSqlField(concreteAbs->keys[2]));
+        rec->setValue(concreteAbs->keys[2], concreteAbs->name->text());
+        rec->append(QSqlField(concreteAbs->keys[3]));
+        rec->setValue(concreteAbs->keys[3], concreteAbs->date_of_manuf->text());
+        rec->append(QSqlField(concreteAbs->keys[4]));
+        rec->setValue(concreteAbs->keys[4], concreteAbs->expiry_date->text());
+        rec->append(QSqlField(concreteAbs->keys[5]));
+        rec->setValue(concreteAbs->keys[5], concreteAbs->on_prescription->isChecked());
+        rec->append(QSqlField(concreteAbs->keys[6]));
+        rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
+        emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
+        delete rec;
+    }
+    return NULL;
+}
 
 
 BonusAbstr::BonusAbstr(const QMap<QString, QString>& titles,
@@ -312,7 +372,7 @@ BonusAbstr::~BonusAbstr() {
 }
 
 void BonusAbstr::exec_clicked() {
-    QString error = impl->processField(this);
+    QString error = impl->processFields(this);
     if (!error.isEmpty()) {
         QMessageBox::warning(this, "Ошибка!", error);
     }
@@ -385,8 +445,15 @@ void BonusAbstr::finalization() {
     vlay->addItem(hlay);
 }
 
+void BonusAbstr::fill_fields(const QSqlRecord & record, const int row) {
+    card_number->setText(record.field(keys[0]).value().toString());
+    name->setText(record.field(keys[1]).value().toString());
+    bonus_amount->setText(record.field(keys[2]).value().toString());
+    this->row = row;
+}
+
 // Реализация для окна ввода данных для добавления в таблицу
-QString AddBonusImplement::processField(inputFields* abs) {
+QString AddBonusImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     BonusAbstr* concreteAbs = qobject_cast<BonusAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
@@ -423,7 +490,7 @@ QString AddBonusImplement::processField(inputFields* abs) {
 
 
 // Реализация для окна ввода данных для поиска в таблице
-QString FindBonusImplement::processField(inputFields * abs) {
+QString FindBonusImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     BonusAbstr* concreteAbs = qobject_cast<BonusAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
@@ -446,6 +513,41 @@ QString FindBonusImplement::processField(inputFields * abs) {
     else {
         where.remove(where.lastIndexOf(" AND "), 5);
         emit Implement::exec_clicked_signal(where);
+    }
+    return NULL;
+}
+
+QString EditBonusImplement::processFields(inputFields* abs) {
+    if (abs == nullptr) return "Undefined";
+    BonusAbstr* concreteAbs = qobject_cast<BonusAbstr*>(abs);
+    if (concreteAbs == nullptr) return "Undefined";
+    if (concreteAbs->card_number->text().length() < 3) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->card_number->objectName()] +
+                             "\"!";
+    }
+    else if (concreteAbs->name->text().length() < 3) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->name->objectName()] +
+                             "\"!";
+    }
+    else if (!concreteAbs->bonus_amount->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->bonus_amount->objectName()] +
+                             "\"!";
+    }
+    else {
+        QSqlRecord* rec = new QSqlRecord();
+        rec->append(QSqlField(concreteAbs->keys[0]));
+        if (!concreteAbs->card_number->text().isEmpty()) {
+            rec->setValue(concreteAbs->keys[0], concreteAbs->card_number->text());
+        }
+        rec->append(QSqlField(concreteAbs->keys[1]));
+        rec->setValue(concreteAbs->keys[1], concreteAbs->name->text());
+        rec->append(QSqlField(concreteAbs->keys[2]));
+        rec->setValue(concreteAbs->keys[2], concreteAbs->bonus_amount->text());
+        emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
+        delete rec;
     }
     return NULL;
 }
@@ -479,7 +581,7 @@ SellAbstr::~SellAbstr() {
 }
 
 void SellAbstr::exec_clicked() {
-    QString error = impl->processField(this);
+    QString error = impl->processFields(this);
     if (!error.isEmpty()) {
         QMessageBox::warning(this, "Ошибка!", error);
     }
@@ -591,8 +693,16 @@ void SellAbstr::med_changed(int index) {
     pieces->setMaximum(amount);
 }
 
+void SellAbstr::fill_fields(const QSqlRecord & record, const int row) {
+    date_of_buy->setText(record.field(keys[1]).value().toString());
+    customer->setCurrentText(record.field(keys[2]).value().toString());
+    medicines->setCurrentText(record.field(keys[3]).value().toString());
+    pieces->setValue(record.field(keys[4]).value().toLongLong());
+    this->row = row;
+}
+
 // Реализация для окна ввода данных для добавления в таблицу
-QString AddSellImplement::processField(inputFields* abs) {
+QString AddSellImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
@@ -639,7 +749,7 @@ QString AddSellImplement::processField(inputFields* abs) {
 
 
 // Реализация для окна ввода данных для поиска в таблице
-QString FindSellImplement::processField(inputFields * abs) {
+QString FindSellImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
@@ -668,3 +778,49 @@ QString FindSellImplement::processField(inputFields * abs) {
     }
     return NULL;
 }
+
+QString EditSellImplement::processFields(inputFields * abs) {
+    if (abs == nullptr) return "Undefined";
+    SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
+    if (concreteAbs == nullptr) return "Undefined";
+    if (!concreteAbs->date_of_buy->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->date_of_buy->objectName()] +
+                             "\"!";
+    }
+    //else if (concreteAbs->customer->currentText().isEmpty()) {
+    //    return "Ошибка ввода в поле \"" +
+    //                         concreteAbs->fields[concreteAbs->customer->objectName()] +
+    //                         "\"!";
+    //}
+    else if (concreteAbs->medicines->currentText().isEmpty()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->medicines->objectName()] +
+                             "\"!";
+    }
+    else if (concreteAbs->pieces->text().isEmpty() ||
+             !concreteAbs->pieces->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->pieces->objectName()] +
+                             "\"!";
+    }
+    else if (concreteAbs->pieces->value() == 0) {
+        return "Лекарства с идентификационным номером " + concreteAbs->medicines->currentText()
+                + " не осталось на складе!";
+    }
+    else {
+        QSqlRecord* rec = new QSqlRecord();
+        rec->append(QSqlField(concreteAbs->keys[1]));
+        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_buy->text());
+        rec->append(QSqlField(concreteAbs->keys[2]));
+        rec->setValue(concreteAbs->keys[2], concreteAbs->customer->currentText());
+        rec->append(QSqlField(concreteAbs->keys[3]));
+        rec->setValue(concreteAbs->keys[3], concreteAbs->medicines->currentText());
+        rec->append(QSqlField(concreteAbs->keys[4]));
+        rec->setValue(concreteAbs->keys[4], concreteAbs->pieces->text());
+        emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
+        delete rec;
+    }
+    return NULL;
+}
+
