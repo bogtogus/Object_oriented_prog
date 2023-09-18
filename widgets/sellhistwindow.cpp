@@ -201,6 +201,9 @@ void SellHistWindow::clicked_on_delete_selected() {
     }
     else {
         for (QModelIndex& index : selection_list) {
+            if (SEntity->get_record(index.row()).field(0).value().isNull()) {
+                temp_sales.remove(SEntity->get_record(index.row()).field(3).value().toInt());
+            }
             SEntity->removeRecord(index.row());
         }
         saveact->setEnabled(true);
