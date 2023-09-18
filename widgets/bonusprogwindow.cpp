@@ -40,9 +40,7 @@ BonusProgWindow::BonusProgWindow(QWidget *parent,
 
 BonusProgWindow::~BonusProgWindow() {
     qDebug() << "DEL bonus {";
-    impl.reset();
     delete ui;
-    qDebug() << "}";
 }
 
 // Реагирование на изменение размеров окна

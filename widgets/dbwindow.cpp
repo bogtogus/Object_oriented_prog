@@ -7,6 +7,13 @@
 
 DBWindow::DBWindow(QWidget *parent) : aChildWin(parent) {}
 
+DBWindow::~DBWindow() {
+    fields.clear();
+    keys.clear();
+    impl.reset();
+    qDebug() << "}";
+}
+
 void DBWindow::init_menubar() {
     menubar = new QMenuBar(this);
     QFont font = menubar->font();

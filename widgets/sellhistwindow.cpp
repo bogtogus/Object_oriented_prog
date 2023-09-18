@@ -43,10 +43,8 @@ SellHistWindow::SellHistWindow(QWidget *parent,
 
 SellHistWindow::~SellHistWindow() {
     qDebug() << "DEL hist {";
-    impl.reset();
     temp_sales.clear();
     delete ui;
-    qDebug() << "}";
 }
 
 // Реагирование на изменение размеров окна

@@ -13,6 +13,23 @@ Entity::Entity(QSharedPointer<QSqlDatabase> odb) {
     model->setEditStrategy(QSqlTableModel::OnManualSubmit);
 }
 
+Entity::Entity(Entity && moved) {
+    this->db = moved.db;
+    this->model = moved.model;
+    moved.model = nullptr;
+    this->field_names = moved.field_names;
+}
+
+Entity &Entity::operator=(Entity && moved) {
+    if (&moved != this) {
+        this->db = moved.db;
+        delete this->model;
+        this->model = moved.model;
+        this->field_names = moved.field_names;
+    }
+    return *this;
+}
+
 Entity::~Entity() {
     qDebug() << "del entity";
     field_names.clear();

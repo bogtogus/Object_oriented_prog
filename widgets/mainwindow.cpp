@@ -133,7 +133,8 @@ void MainWindow::initDB() {
                  "date_of_manuf DATE NOT NULL,"
                  "expiry_date DATE NOT NULL,"
                  "on_prescription INTEGER DEAFULT (0),"
-                 "pieces INTEGER CHECK (pieces >= 0) DEFAULT (1)"
+                 "pieces INTEGER CHECK (pieces >= 0) DEFAULT (1),"
+                 "price_for_one INTEGER NOT NULL DEFAULT (0) CHECK (price_for_one >= 0)"
                  ");";
     QSqlQuery* query = new QSqlQuery(this->db->connectionName());
     if(!query->exec(qu)) {
@@ -164,6 +165,7 @@ void MainWindow::initDB() {
             "customer STRING,"
             "medicines TEXT NOT NULL,"
             "pieces INTEGER CHECK (pieces > 0) NOT NULL,"
+            "earnings BIGINT DEFAULT (0) NOT NULL,"
             "FOREIGN KEY(customer) references reged_customers(card_number) "
             "   ON DELETE NO ACTION,"
             "FOREIGN KEY(medicines) references medicines(id)"
@@ -195,11 +197,11 @@ void MainWindow::initDB() {
     }
     QVector<QString> Mfn = {"ID", "Производитель", "Название лек-ва",
                             "Дата изгот.", "Годен до", "Рецепт необходим",
-                            "Количество"};
+                            "Количество", "Цена за шт."};
     QVector<QString> Bfn = {"Номер карты", "ФИО", "Кол-во баллов"};
     QVector<QString> Sfn = {"ID", "Дата покупки", "Бонусная карта",
                             "ID лекарства",
-                            "Количество"};
+                            "Количество", "Выручка"};
     // Создание объектов, работающих с конкретными таблицами БД
     MEntity = new MedsEntity(db, Mfn);
     BEntity = new BonusEntity(db, Bfn);

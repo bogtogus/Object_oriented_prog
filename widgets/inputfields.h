@@ -62,6 +62,7 @@ private:
     QLineEdit* expiry_date;
     QCheckBox* on_prescription;
     QLineEdit* pieces;
+    QLineEdit* price;
     QHBoxLayout* hlay;
 
     // номер изменяемой строки при соответствующей операции
@@ -74,6 +75,7 @@ private:
     void produceField4();
     void produceField5();
     void produceField6();
+    void produceField7();
     // добавления кнопки назад и кнопки совершения операции
     void finalization();
     void fill_fields(const QSqlRecord&, const int) override;
@@ -127,6 +129,7 @@ private:
     QComboBox* customer;
     QComboBox* medicines;
     QSpinBox* pieces;
+    QLineEdit* earnings;
     QHBoxLayout* hlay;
     const SellEntity* entity;
 
@@ -136,6 +139,7 @@ private:
     void produceField2();
     void produceField3();
     void produceField4();
+    void produceField5();
     void finalization();
     void med_changed(int);
     void fill_fields(const QSqlRecord&, const int) override;

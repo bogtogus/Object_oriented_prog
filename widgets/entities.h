@@ -20,6 +20,10 @@ protected:
     QVector<QString> field_names;
 public:
     Entity(QSharedPointer<QSqlDatabase> odb);
+    Entity(const Entity&) = delete;
+    Entity& operator=(const Entity&) = delete;
+    Entity(Entity&&);
+    Entity& operator=(Entity&&);
     virtual ~Entity();
     QSqlTableModel* get_model() const;
     QSqlRecord get_record(const int id) const;

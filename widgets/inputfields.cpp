@@ -66,13 +66,13 @@ MedsAbstr::MedsAbstr(const QMap<QString, QString>& titles,
     produceField4();
     produceField5();
     produceField6();
+    produceField7();
     finalization();
     connect(exec_button, &QPushButton::clicked, this, &MedsAbstr::exec_clicked);
 }
 
 MedsAbstr::~MedsAbstr() {
     qDebug() << "DEL MedsAbstr";
-    impl.reset();
 }
 
 // нажание на кнопку выполнения операции
@@ -174,6 +174,22 @@ void MedsAbstr::produceField6() {
     label_6 = nullptr;
 }
 
+void MedsAbstr::produceField7() {
+    QLabel* label_7 = new QLabel(fields[keys[7]], this);
+    label_7->setObjectName("label_7");
+    label_7->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    //labels.push_back(label_7);
+    price = new QLineEdit("", this);
+    price->setObjectName(keys[7]);
+    price->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
+    QRegularExpression regexp("[+]?\\d{1,5}([.,]\\d{1,2})?");
+    QValidator* valid = new QRegularExpressionValidator(regexp, this);
+    price->setValidator(valid);
+    price->setMinimumHeight(30);
+    flay->addRow(label_7, price);
+    label_7 = nullptr;
+}
+
 void MedsAbstr::finalization() {
     vlay->setSpacing(7);
     vlay->setContentsMargins(20, 20, 20 ,20);
@@ -235,6 +251,12 @@ QString AddMedsImplement::processFields(inputFields* abs) {
                              concreteAbs->fields[concreteAbs->pieces->objectName()] +
                              "\"!";
     }
+    else if (concreteAbs->price->text().isEmpty() ||
+            !concreteAbs->price->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->price->objectName()] +
+                             "\"!";
+    }
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
@@ -249,6 +271,8 @@ QString AddMedsImplement::processFields(inputFields* abs) {
         rec->setValue(concreteAbs->keys[5], concreteAbs->on_prescription->isChecked());
         rec->append(QSqlField(concreteAbs->keys[6]));
         rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
+        rec->append(QSqlField(concreteAbs->keys[7]));
+        rec->setValue(concreteAbs->keys[7], concreteAbs->price->text());
         emit Implement::exec_clicked_signal(rec);
         delete rec;
     }
@@ -286,6 +310,11 @@ QString FindMedsImplement::processFields(inputFields * abs) {
             !concreteAbs->pieces->hasAcceptableInput()) {
         where += concreteAbs->pieces->objectName() +
                 " = \"" + concreteAbs->pieces->text() + "\" AND ";
+    }
+    if (!concreteAbs->price->text().isEmpty() &&
+            !concreteAbs->price->hasAcceptableInput()) {
+        where += concreteAbs->price->objectName() +
+                " = \"" + concreteAbs->price->text() + "\" AND ";
     }
     if (where.isEmpty()) {
         return "Все поля пусты, поиск невозможен!";
@@ -327,6 +356,12 @@ QString EditMedsImplement::processFields(inputFields* abs) {
                              concreteAbs->fields[concreteAbs->pieces->objectName()] +
                              "\"!";
     }
+    else if (concreteAbs->price->text().isEmpty() ||
+            !concreteAbs->price->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->price->objectName()] +
+                             "\"!";
+    }
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
@@ -341,6 +376,8 @@ QString EditMedsImplement::processFields(inputFields* abs) {
         rec->setValue(concreteAbs->keys[5], concreteAbs->on_prescription->isChecked());
         rec->append(QSqlField(concreteAbs->keys[6]));
         rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
+        rec->append(QSqlField(concreteAbs->keys[7]));
+        rec->setValue(concreteAbs->keys[7], concreteAbs->price->text());
         emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
         delete rec;
     }
@@ -567,6 +604,7 @@ SellAbstr::SellAbstr(const QMap<QString, QString>& titles,
     produceField2();
     produceField3();
     produceField4();
+    produceField5();
     finalization();
     connect(exec_button, &QPushButton::clicked, this, &SellAbstr::exec_clicked);
 }
@@ -655,9 +693,23 @@ void SellAbstr::produceField4() {
     pieces->setMinimumHeight(30);
     pieces->setMaximumWidth(50);
     pieces->setMinimum(1);
-    pieces->setEnabled(false);
     flay->addRow(label_4, pieces);
     label_4 = nullptr;
+}
+
+void SellAbstr::produceField5() {
+    QLabel* label_5 = new QLabel(fields[keys[5]], this);
+    label_5->setObjectName("label_5");
+    label_5->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    earnings = new QLineEdit("", this);
+    earnings->setObjectName(keys[5]);
+    earnings->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
+    earnings->setMinimumHeight(30);
+    QRegularExpression regexp("[+]?\\d{1,20}([.,]\\d{1,2})?");
+    QValidator* valid = new QRegularExpressionValidator(regexp, this);
+    earnings->setValidator(valid);
+    flay->addRow(label_5, earnings);
+    label_5 = nullptr;
 }
 
 void SellAbstr::finalization() {
@@ -698,6 +750,7 @@ void SellAbstr::fill_fields(const QSqlRecord & record, const int row) {
     customer->setCurrentText(record.field(keys[2]).value().toString());
     medicines->setCurrentText(record.field(keys[3]).value().toString());
     pieces->setValue(record.field(keys[4]).value().toLongLong());
+    earnings->setText(record.field(keys[5]).value().toString());
     this->row = row;
 }
 
@@ -731,6 +784,12 @@ QString AddSellImplement::processFields(inputFields* abs) {
         return "Лекарства с идентификационным номером " + concreteAbs->medicines->currentText()
                 + " не осталось на складе!";
     }
+    else if (concreteAbs->earnings->text().isEmpty() ||
+             !concreteAbs->earnings->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->earnings->objectName()] +
+                             "\"!";
+    }
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
@@ -741,6 +800,8 @@ QString AddSellImplement::processFields(inputFields* abs) {
         rec->setValue(concreteAbs->keys[3], concreteAbs->medicines->currentText());
         rec->append(QSqlField(concreteAbs->keys[4]));
         rec->setValue(concreteAbs->keys[4], concreteAbs->pieces->text());
+        rec->append(QSqlField(concreteAbs->keys[5]));
+        rec->setValue(concreteAbs->keys[5], concreteAbs->earnings->text());
         emit Implement::exec_clicked_signal(rec);
         delete rec;
     }
@@ -807,6 +868,12 @@ QString EditSellImplement::processFields(inputFields * abs) {
     else if (concreteAbs->pieces->value() == 0) {
         return "Лекарства с идентификационным номером " + concreteAbs->medicines->currentText()
                 + " не осталось на складе!";
+    }
+    else if (concreteAbs->earnings->text().isEmpty() ||
+             !concreteAbs->earnings->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->earnings->objectName()] +
+                             "\"!";
     }
     else {
         QSqlRecord* rec = new QSqlRecord();

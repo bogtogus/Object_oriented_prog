@@ -38,21 +38,20 @@ MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
 
 MedicinesWindow::~MedicinesWindow() {
     qDebug() << "DEL medics {";
-    impl.reset();
     delete ui;
-    qDebug() << "}";
 }
 
 // Реагирование на изменение размеров окна
 // задание нужной ширины каждого столбца таблицы
 void MedicinesWindow::resizeEvent(QResizeEvent *event) {
     ui->table->setColumnWidth(0, 20);
-    ui->table->setColumnWidth(1, (ui->table->width() - 520)/2);
-    ui->table->setColumnWidth(2, (ui->table->width() - 520)/2);
+    ui->table->setColumnWidth(1, (ui->table->width() - 570)/2);
+    ui->table->setColumnWidth(2, (ui->table->width() - 570)/2);
     ui->table->setColumnWidth(3, 110);
     ui->table->setColumnWidth(4, 110);
-    ui->table->setColumnWidth(5, 90);
+    ui->table->setColumnWidth(5, 70);
     ui->table->setColumnWidth(6, 110);
+    ui->table->setColumnWidth(7, 60);
     ui->table->resizeRowsToContents();
     event->accept();
 }
