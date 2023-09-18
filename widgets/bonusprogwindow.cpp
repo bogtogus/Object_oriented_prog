@@ -6,6 +6,11 @@
 #include <QMenu>
 #include <QToolBar>
 
+/*!
+ * \brief Конструктор окна.
+ * \param parent - родительский объект (обычно главное окно).
+ * \param BEntity - объект сущности бонусных карт.
+ */
 BonusProgWindow::BonusProgWindow(QWidget *parent,
                                   BonusEntity* BEntity) :
     DBWindow(parent),
@@ -43,8 +48,12 @@ BonusProgWindow::~BonusProgWindow() {
     delete ui;
 }
 
-// Реагирование на изменение размеров окна
-// задание нужной ширины каждого столбца таблицы
+/*!
+ * \brief Реагирование на изменение размеров окна.
+ * Производится задание нужной ширины каждого столбца таблицы.
+ * Метод вызывается автоматически по сигналу.
+ * \param event - событие изменения размеров окна.
+ */
 void BonusProgWindow::resizeEvent(QResizeEvent *event) {
     ui->table->setColumnWidth(0, 100);
     ui->table->setColumnWidth(1, std::max((ui->table->width() - 300), 100));
@@ -52,7 +61,11 @@ void BonusProgWindow::resizeEvent(QResizeEvent *event) {
     event->accept();
 }
 
-// нажание на кнопку возврата назад
+/*!
+ * \brief Метод возврата назад.
+ * При несохранённых изменениях просит подтверждения действия.
+ * Переход назад осуществляется излучением сигнала goback_signal(...) для главного окна.
+ */
 void BonusProgWindow::goback() {
     if (entity->isDirty()) {
         QMessageBox* msgBox = new QMessageBox("Возврат назад",
@@ -74,11 +87,19 @@ void BonusProgWindow::goback() {
     }
 }
 
+/*!
+ * \brief Метод, вызываемый при закрытии основного окна.
+ * \param event - событие закрытия окна.
+ */
 void BonusProgWindow::closeEvent(QCloseEvent *event) {
     qDebug() << "close BonusProgWindow";
     event->accept();
 }
 
+/*!
+ * \brief Инициализация табличного представления, а именно
+ * передача ему модели таблицы, а также настройка нескольких параметров представления.
+ */
 void BonusProgWindow::init_table() {
     ui->table->setModel(entity->get_model());
     QHeaderView* header = ui->table->horizontalHeader();
@@ -91,6 +112,9 @@ void BonusProgWindow::init_table() {
     ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
+/*!
+ * \brief Метод привязки всех методов меню к соответствующим методам класса.
+ */
 void BonusProgWindow::connect_menu() {
     connect(backact, &QAction::triggered, this, &BonusProgWindow::goback);
     connect(addact, &QAction::triggered, this, &BonusProgWindow::clicked_on_add);
@@ -104,7 +128,10 @@ void BonusProgWindow::connect_menu() {
     connect(revertact, &QAction::triggered, this, &BonusProgWindow::clicked_on_revert);
 }
 
-// переход к форме добавления записи
+/*!
+ * \brief Добавление записи по данным, полученным из окна заполнения данных.
+ * \param record - сформированная запись.
+ */
 void BonusProgWindow::add_record_db(const QSqlRecord* record) {
     if (entity->addRecord(record)) {
         QMessageBox::information(this, "Успех!",
@@ -120,6 +147,11 @@ void BonusProgWindow::add_record_db(const QSqlRecord* record) {
     revertact->setEnabled(true);
 }
 
+/*!
+ * \brief Изменение записи согласно данным, полученным из окна заполнения данных.
+ * \param record - сформированная новая запись.
+ * \param row - строка, где находится старая запись.
+ */
 void BonusProgWindow::edit_record_db(const QSqlRecord & record, const int row) {
     if (entity->setRecord(row, record)) {
         QMessageBox::information(this, "Успех!",
@@ -135,7 +167,12 @@ void BonusProgWindow::edit_record_db(const QSqlRecord & record, const int row) {
     revertact->setEnabled(true);
 }
 
-// добавление записи
+/*!
+ * \brief Переход к форме добавления записи в таблицу.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом добавления записи в таблицу.
+ */
 void BonusProgWindow::clicked_on_add() {
     impl = QSharedPointer<Implement>(new AddBonusImplement());
     QMap<QString, QString> titles = {{"title", "Добавить бонусную карту."}, {"exec", "Добавить"}};
@@ -149,6 +186,12 @@ void BonusProgWindow::clicked_on_add() {
     emit summoned_child(InFAbs);
 }
 
+/*!
+ * \brief Переход к форме редактирования записи в таблице.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом изменения записи в таблице.
+ */
 void BonusProgWindow::clicked_on_edit() {
     impl = QSharedPointer<Implement>(new EditBonusImplement());
     QItemSelectionModel* selection = ui->table->selectionModel();
@@ -166,7 +209,13 @@ void BonusProgWindow::clicked_on_edit() {
     emit summoned_child(InFAbs);
 }
 
-// переход к форме поиска записи
+/*!
+ * \brief Переход к форме поиска записи в таблице.
+ * Поиск осуществляется по любому полю.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом добавления записи в таблицу.
+ */
 void BonusProgWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindBonusImplement());
     QMap<QString, QString> titles = {{"title", "Найти бонусную карту."}, {"exec", "Найти"}};
@@ -179,7 +228,10 @@ void BonusProgWindow::clicked_on_find() {
     emit summoned_child(InFAbs);
 }
 
-// установка фильтра по введённым данным в поля
+/*!
+ * \brief Установка фильтра для модели согласно запросу по полям записи.
+ * \param where - SQL-запрос типа "WHERE ..."
+ */
 void BonusProgWindow::find_record_db(const QString& where) {
     qDebug() << where;
     entity->setFilter(where);
@@ -194,7 +246,11 @@ void BonusProgWindow::find_record_db(const QString& where) {
     }
 }
 
-// удаление выбранной строки
+/*!
+ * \brief Удаление записи или нескольих записей, выделенных в таблице.
+ * \brief Согласно размеру списка выделенных записей запрашивается подтверждение на удаление,
+ * а затем и удаление выделенных записей.
+ */
 void BonusProgWindow::clicked_on_delete_selected() {
     QItemSelectionModel* selection = ui->table->selectionModel();
     QModelIndexList selection_list(selection->selectedIndexes());
@@ -232,7 +288,9 @@ void BonusProgWindow::clicked_on_delete_selected() {
     }
 }
 
-// отмена изменений в таблице
+/*!
+ * \brief Сброс поиска по таблице.
+ */
 void BonusProgWindow::clicked_on_reset() {
     entity->setFilter("");
     if (entity->rowCount() == 0) {
@@ -242,7 +300,9 @@ void BonusProgWindow::clicked_on_reset() {
     delfoundact->setEnabled(false);
 }
 
-// удаление всех найденных записей
+/*!
+ * \brief Удаление всех найденных записей.
+ */
 void BonusProgWindow::clicked_on_delete_found() {
     if (entity->filter() == "") return;
     QMessageBox* msgBox = new QMessageBox("Удаление найденных",
@@ -265,7 +325,9 @@ void BonusProgWindow::clicked_on_delete_found() {
     }
 }
 
-// подтверждение изменений в таблице
+/*!
+ * \brief Подтверждение изменений в таблице.
+ */
 void BonusProgWindow::clicked_on_submit() {
     if (!entity->submitAll()) {
         qDebug() << entity->lastError();
@@ -276,7 +338,9 @@ void BonusProgWindow::clicked_on_submit() {
     }
 }
 
-// отмена изменений в таблице
+/*!
+ * \brief Отмена изменений в таблице.
+ */
 void BonusProgWindow::clicked_on_revert() {
     revertact->setEnabled(false);
     saveact->setEnabled(false);

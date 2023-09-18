@@ -7,8 +7,13 @@
 #include <QSharedPointer>
 #include <QAbstractItemView>
 
-// Базовый класс сущности с основным набором реализованных методов.
-// Работа производится с Базой Данных.
+
+
+
+/*!
+ * \brief Базовый класс сущности с основным набором реализованных методов.
+ * Работа производится с Базой Данных.
+ */
 class Entity : public QObject {
     Q_OBJECT
 protected:
@@ -30,7 +35,6 @@ public:
     int rowCount() const;
     int columnCount() const;
     QString filter() const;
-    // Есть ли неподтверждённые изменения
     bool isDirty() const;
     QSqlError lastError() const;
     QVector<QString> get_fnames() const;
@@ -45,7 +49,9 @@ public:
     bool select();
 };
 
-// Сущность Склад лекарств с двумя дополнительными методами
+/*!
+ * \brief Сущность Склад лекарств с двумя дополнительными методами
+ */
 class MedsEntity : public Entity {
     Q_OBJECT
 public:
@@ -60,18 +66,21 @@ public:
     bool update_record(const int id, const int amount);
 };
 
-// Сущность Зарегистрированные в бонусной программе покупатели
+/*!
+ * \brief Сущность Зарегистрированные в бонусной программе покупатели
+ */
 class BonusEntity : public Entity {
     Q_OBJECT
 public:
     BonusEntity(QSharedPointer<QSqlDatabase> odb,
                 const QVector<QString>&);
     ~BonusEntity();
-    // получить все номера бонусных карт
     QVector<QString> get_all_cards() const;
 };
 
-// Сущность История продаж
+/*! Сущность История продаж
+ *
+ */
 class SellEntity : public Entity {
     Q_OBJECT
 private:

@@ -217,6 +217,7 @@ void MedsAbstr::fill_fields(const QSqlRecord & record, const int row) {
     expiry_date->setText(record.field(keys[4]).value().toString());
     on_prescription->setChecked(record.field(keys[5]).value().toBool());
     pieces->setText(record.field(keys[6]).value().toString());
+    price->setText(record.field(keys[7]).value().toString());
     this->row = row;
 }
 

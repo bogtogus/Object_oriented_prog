@@ -11,6 +11,9 @@ namespace Ui {
 class SellHistWindow;
 }
 
+/*!
+ * \brief Окно работы с таблицей проданных лекарств.
+ */
 class SellHistWindow : public DBWindow
 {
     Q_OBJECT

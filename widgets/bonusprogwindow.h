@@ -11,6 +11,9 @@ namespace Ui {
 class BonusProgWindow;
 }
 
+/*!
+ * \brief Окно работы с таблицей зарегистрированных бонусных карт.
+ */
 class BonusProgWindow : public DBWindow
 {
     Q_OBJECT
@@ -24,7 +27,7 @@ public:
 private:
     Ui::BonusProgWindow *ui;
 
-    // объект, взаимодействующий с таблицей карт в БД
+    // объект сущности, взаимодействующий с таблицей карт в БД
     BonusEntity* entity;
 
     void init_table();

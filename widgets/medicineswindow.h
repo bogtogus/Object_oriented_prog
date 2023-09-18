@@ -11,6 +11,9 @@ namespace Ui {
 class MedicinesWindow;
 }
 
+/*!
+ * \brief Окно работы с таблицей медикаментов на складе.
+ */
 class MedicinesWindow : public DBWindow
 {
     Q_OBJECT

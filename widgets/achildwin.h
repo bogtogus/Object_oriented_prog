@@ -6,6 +6,12 @@
 #include <QMainWindow>
 #include <QDebug>
 
+/*!
+ * \brief Базовый абстрактный класс для дочерних окон (по отношению к основному MainWindow).
+ * \details Сигнал goback_signal(...) оповещает MainWindow о том, что текущее
+ * окно нужно закрыть. Сигнал summoned_child(...) оповещает MainWindow о том, что
+ * нужно отобразить новое дочернее окно.
+ */
 class aChildWin : public QWidget
 {
 Q_OBJECT

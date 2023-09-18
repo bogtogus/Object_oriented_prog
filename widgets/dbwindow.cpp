@@ -14,6 +14,10 @@ DBWindow::~DBWindow() {
     qDebug() << "}";
 }
 
+/*!
+ * \brief Инициализация меню.
+ * \details Создаются подменю и соответсвующие им действия.
+ */
 void DBWindow::init_menubar() {
     menubar = new QMenuBar(this);
     QFont font = menubar->font();
@@ -75,6 +79,10 @@ void DBWindow::init_menubar() {
     connect_menu();
 }
 
+/*!
+ * \brief Включение функций работы со строками.
+ * \details Метод выполняется при нажатии на таблицу.
+ */
 void DBWindow::enable_rows_operations() {
     delselact->setEnabled(true);
     editact->setEnabled(true);

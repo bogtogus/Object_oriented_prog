@@ -75,7 +75,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
             qDebug() << "close db";
             db->close();
         }
-        qDebug() << "close main (event) {";
+        qDebug() << "close MainWindow (event) {";
         int index = ui->stackedWidget->count() - 1;
         // Закрытие всех виджетов-окон перед закрытием основного окна
         while(index >= 0) {

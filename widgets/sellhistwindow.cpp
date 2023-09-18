@@ -296,7 +296,7 @@ void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
     revertact->setEnabled(true);
 }
 
-// отмена изменений в таблице
+// сброс поиска
 void SellHistWindow::clicked_on_reset(){
     SEntity->setFilter("");
     if (SEntity->rowCount() == 0) {
