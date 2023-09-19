@@ -129,45 +129,6 @@ void BonusProgWindow::connect_menu() {
 }
 
 /*!
- * \brief Добавление записи по данным, полученным из окна заполнения данных.
- * \param record - сформированная запись.
- */
-void BonusProgWindow::add_record_db(const QSqlRecord* record) {
-    if (entity->addRecord(record)) {
-        QMessageBox::information(this, "Успех!",
-                             "Введённая запись добавлена в временное представление таблицы базы данных. "
-                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
-    }
-    else {
-        QMessageBox::warning(this, "Ошибка!",
-                             "Ошибка добвления записи в таблицу!");
-    }
-    //fields_names.clear();
-    saveact->setEnabled(true);
-    revertact->setEnabled(true);
-}
-
-/*!
- * \brief Изменение записи согласно данным, полученным из окна заполнения данных.
- * \param record - сформированная новая запись.
- * \param row - строка, где находится старая запись.
- */
-void BonusProgWindow::edit_record_db(const QSqlRecord & record, const int row) {
-    if (entity->setRecord(row, record)) {
-        QMessageBox::information(this, "Успех!",
-                             "Введённая запись отредактирована. "
-                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
-    }
-    else {
-        QMessageBox::warning(this, "Ошибка!",
-                             "Ошибка добвления записи в таблицу!");
-    }
-    //fields_names.clear();
-    saveact->setEnabled(true);
-    revertact->setEnabled(true);
-}
-
-/*!
  * \brief Переход к форме добавления записи в таблицу.
  * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
  * Затем создаётся объект, генерирующий форму согласно полям таблицы.
@@ -184,6 +145,25 @@ void BonusProgWindow::clicked_on_add() {
             &BonusProgWindow::add_record_db);
     impl.reset();
     emit summoned_child(InFAbs);
+}
+
+/*!
+ * \brief Добавление записи по данным, полученным из окна заполнения данных.
+ * \param record - сформированная запись.
+ */
+void BonusProgWindow::add_record_db(const QSqlRecord* record) {
+    if (entity->addRecord(record)) {
+        QMessageBox::information(this, "Успех!",
+                             "Введённая запись добавлена в временное представление таблицы базы данных. "
+                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+    }
+    else {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Ошибка добвления записи в таблицу!");
+    }
+    //fields_names.clear();
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
 }
 
 /*!
@@ -207,6 +187,26 @@ void BonusProgWindow::clicked_on_edit() {
             &BonusProgWindow::edit_record_db);
     impl.reset();
     emit summoned_child(InFAbs);
+}
+
+/*!
+ * \brief Изменение записи согласно данным, полученным из окна заполнения данных.
+ * \param record - сформированная новая запись.
+ * \param row - строка в модели таблицы, где находится старая запись.
+ */
+void BonusProgWindow::edit_record_db(const QSqlRecord & record, const int row) {
+    if (entity->setRecord(row, record)) {
+        QMessageBox::information(this, "Успех!",
+                             "Введённая запись отредактирована. "
+                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+    }
+    else {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Ошибка добвления записи в таблицу!");
+    }
+    //fields_names.clear();
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
 }
 
 /*!

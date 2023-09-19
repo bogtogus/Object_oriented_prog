@@ -7,6 +7,11 @@
 #include <QMenu>
 #include <QToolBar>
 
+/*!
+ * \brief Конструктор окна.
+ * \param parent - родительский объект (обычно главное окно).
+ * \param MEntity - объект сущности лекарств.
+ */
 MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
     DBWindow(parent),
     ui(new Ui::MedicinesWindow)
@@ -41,8 +46,12 @@ MedicinesWindow::~MedicinesWindow() {
     delete ui;
 }
 
-// Реагирование на изменение размеров окна
-// задание нужной ширины каждого столбца таблицы
+/*!
+ * \brief Реагирование на изменение размеров окна.
+ * Производится задание нужной ширины каждого столбца таблицы.
+ * Метод вызывается автоматически по сигналу.
+ * \param event - событие изменения размеров окна.
+ */
 void MedicinesWindow::resizeEvent(QResizeEvent *event) {
     ui->table->setColumnWidth(0, 20);
     ui->table->setColumnWidth(1, (ui->table->width() - 570)/2);
@@ -56,6 +65,10 @@ void MedicinesWindow::resizeEvent(QResizeEvent *event) {
     event->accept();
 }
 
+/*!
+ * \brief Инициализация табличного представления, а именно
+ * передача ему модели таблицы, а также настройка нескольких параметров представления.
+ */
 void MedicinesWindow::init_table() {
     if (entity == nullptr) return;
     entity->select();
@@ -71,6 +84,9 @@ void MedicinesWindow::init_table() {
     ui->table->setColumnWidth(0, 20);
 }
 
+/*!
+ * \brief Метод привязки всех методов меню к соответствующим методам класса.
+ */
 void MedicinesWindow::connect_menu() {
     connect(backact, &QAction::triggered, this, &MedicinesWindow::goback);
     connect(addact, &QAction::triggered, this, &MedicinesWindow::clicked_on_add);
@@ -84,11 +100,11 @@ void MedicinesWindow::connect_menu() {
     connect(revertact, &QAction::triggered, this, &MedicinesWindow::clicked_on_revert);
 }
 
-//void MedicinesWindow::closem() {
-//
-//}
-
-// нажание на кнопку возврата назад
+/*!
+ * \brief Метод возврата назад.
+ * При несохранённых изменениях просит подтверждения действия.
+ * Переход назад осуществляется излучением сигнала goback_signal(...) для главного окна.
+ */
 void MedicinesWindow::goback() {
     if (entity->isDirty()) {
         QMessageBox* msgBox = new QMessageBox("Возврат назад",
@@ -110,12 +126,21 @@ void MedicinesWindow::goback() {
     }
 }
 
+/*!
+ * \brief Метод, вызываемый при закрытии основного окна.
+ * \param event - событие закрытия окна.
+ */
 void MedicinesWindow::closeEvent(QCloseEvent* event) {
     qDebug() << "close MedicinesWindow";
     event->accept();
 }
 
-// переход к форме добавления записи
+/*!
+ * \brief Переход к форме добавления записи в таблицу.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом добавления записи в таблицу.
+ */
 void MedicinesWindow::clicked_on_add() {
     qDebug() << fields;
     impl = QSharedPointer<Implement>(new AddMedsImplement());
@@ -130,7 +155,10 @@ void MedicinesWindow::clicked_on_add() {
     emit summoned_child(InFAbs);
 }
 
-// добавление записи
+/*!
+ * \brief Добавление записи по данным, полученным из окна заполнения данных.
+ * \param record - сформированная запись.
+ */
 void MedicinesWindow::add_record_db(const QSqlRecord* record) {
     if (entity->addRecord(record)) {
         QMessageBox::information(this, "Успех!",
@@ -146,7 +174,150 @@ void MedicinesWindow::add_record_db(const QSqlRecord* record) {
     revertact->setEnabled(true);
 }
 
-// удаление выбранных строк
+/*!
+ * \brief Переход к форме редактирования записи в таблице.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом изменения записи в таблице.
+ */
+void MedicinesWindow::clicked_on_edit() {
+    impl = QSharedPointer<Implement>(new EditMedsImplement());
+    QItemSelectionModel* selection = ui->table->selectionModel();
+    int row = selection->selectedIndexes().at(0).row();
+    QSqlRecord record = entity->get_record(row);
+    QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
+    InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
+    InFAbs->fill_fields(record, row);
+    titles.clear();
+    connect(impl.get(),
+            QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
+            this,
+            &MedicinesWindow::edit_record_db);
+    impl.reset();
+    emit summoned_child(InFAbs);
+}
+
+/*!
+ * \brief Изменение записи согласно данным, полученным из окна заполнения данных.
+ * \param record - сформированная новая запись.
+ * \param row - строка в модели таблицы, где находится старая запись.
+ */
+void MedicinesWindow::edit_record_db(const QSqlRecord& record, const int row) {
+    if (entity->setRecord(row, record)) {
+        QMessageBox::information(this, "Успех!",
+                             "Введённая запись отредактирована. "
+                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+    }
+    else {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Ошибка добвления записи в таблицу!");
+    }
+    //fields_names.clear();
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
+}
+
+/*!
+ * \brief Переход к форме поиска записи в таблице.
+ * Поиск осуществляется по любому полю.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом добавления записи в таблицу.
+ */
+void MedicinesWindow::clicked_on_find() {
+    impl = QSharedPointer<Implement>(new FindMedsImplement());
+    QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
+    InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
+    connect(impl.get(),
+            QOverload<const QString&>::of(&Implement::exec_clicked_signal),
+            this,
+            &MedicinesWindow::find_record_db);
+    impl.reset();
+    emit summoned_child(InFAbs);
+}
+
+/*!
+ * \brief Установка фильтра для модели согласно запросу по полям записи.
+ * \param where - SQL-запрос типа "WHERE ..."
+ */
+void MedicinesWindow::find_record_db(const QString& where) {
+    qDebug() << where;
+    entity->setFilter(where);
+    resetsrchact->setEnabled(true);
+    if (entity->rowCount() == 0) {
+        QMessageBox::warning(this, "Ошибка!",
+                             "По заданному запросу ничего не найдено!");
+    }
+    else {
+        InFAbs->goback();
+        delfoundact->setEnabled(true);
+    }
+}
+
+/*!
+ * \brief Подтверждение изменений в таблице.
+ */
+void MedicinesWindow::clicked_on_submit() {
+    if (!entity->submitAll()) {
+        qDebug() << entity->lastError();
+    }
+    else {
+        saveact->setEnabled(false);
+        revertact->setEnabled(false);
+    }
+}
+
+/*!
+ * \brief Отмена изменений в таблице.
+ */
+void MedicinesWindow::clicked_on_revert() {
+    saveact->setEnabled(false);
+    revertact->setEnabled(false);
+    entity->revertAll();
+}
+
+
+/*!
+ * \brief Сброс поиска по таблице.
+ */
+void MedicinesWindow::clicked_on_reset(){
+    entity->setFilter("");
+    if (entity->rowCount() == 0) {
+        entity->select();
+    }
+    resetsrchact->setEnabled(false);
+    delfoundact->setEnabled(false);
+}
+
+/*!
+ * \brief Удаление всех найденных записей.
+ */
+void MedicinesWindow::clicked_on_delete_found() {
+    if (entity->filter() == "") return;
+    QMessageBox* msgBox = new QMessageBox("Удаление найденных",
+                                          "Удалить все найденные записи?\n",
+                                          QMessageBox::Question,
+                                          QMessageBox::Button::Yes,
+                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Cancel,
+                                          this);
+    int resBtn = msgBox->exec();
+    qDebug() << entity->rowCount();
+    if (resBtn == QMessageBox::Yes) {
+        entity->removeRecords(0, entity->rowCount());
+        QMessageBox::information(this, "Успех!",
+                             "Все найденные записи помечены на удаление. "
+                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+        saveact->setEnabled(true);
+        revertact->setEnabled(true);
+    }
+}
+
+/*!
+ * \brief Удаление записи или нескольих записей, выделенных в таблице.
+ * \brief Согласно размеру списка выделенных записей запрашивается подтверждение на удаление,
+ * а затем и удаление выделенных записей.
+ */
 void MedicinesWindow::clicked_on_delete_selected() {
     QItemSelectionModel* selection = ui->table->selectionModel();
     QModelIndexList selection_list(selection->selectedIndexes());
@@ -178,116 +349,6 @@ void MedicinesWindow::clicked_on_delete_selected() {
         for (QModelIndex& index : selection_list) {
             entity->removeRecord(index.row());
         }
-        saveact->setEnabled(true);
-        revertact->setEnabled(true);
-    }
-}
-
-void MedicinesWindow::clicked_on_edit() {
-    impl = QSharedPointer<Implement>(new EditMedsImplement());
-    QItemSelectionModel* selection = ui->table->selectionModel();
-    int row = selection->selectedIndexes().at(0).row();
-    QSqlRecord record = entity->get_record(row);
-    QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
-    InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
-    InFAbs->fill_fields(record, row);
-    titles.clear();
-    connect(impl.get(),
-            QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
-            this,
-            &MedicinesWindow::edit_record_db);
-    impl.reset();
-    emit summoned_child(InFAbs);
-}
-
-// подтверждение изменений в таблице
-void MedicinesWindow::clicked_on_submit() {
-    if (!entity->submitAll()) {
-        qDebug() << entity->lastError();
-    }
-    else {
-        saveact->setEnabled(false);
-        revertact->setEnabled(false);
-    }
-}
-
-// отмена изменений в таблице
-void MedicinesWindow::clicked_on_revert() {
-    saveact->setEnabled(false);
-    revertact->setEnabled(false);
-    entity->revertAll();
-}
-
-// переход к форме поиска записи
-void MedicinesWindow::clicked_on_find() {
-    impl = QSharedPointer<Implement>(new FindMedsImplement());
-    QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
-    InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
-    connect(impl.get(),
-            QOverload<const QString&>::of(&Implement::exec_clicked_signal),
-            this,
-            &MedicinesWindow::find_record_db);
-    impl.reset();
-    emit summoned_child(InFAbs);
-}
-
-// установка фильтра по введённым данным в поля
-void MedicinesWindow::find_record_db(const QString& where) {
-    qDebug() << where;
-    entity->setFilter(where);
-    resetsrchact->setEnabled(true);
-    if (entity->rowCount() == 0) {
-        QMessageBox::warning(this, "Ошибка!",
-                             "По заданному запросу ничего не найдено!");
-    }
-    else {
-        InFAbs->goback();
-        delfoundact->setEnabled(true);
-    }
-}
-
-void MedicinesWindow::edit_record_db(const QSqlRecord& record, const int row) {
-    if (entity->setRecord(row, record)) {
-        QMessageBox::information(this, "Успех!",
-                             "Введённая запись отредактирована. "
-                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
-    }
-    else {
-        QMessageBox::warning(this, "Ошибка!",
-                             "Ошибка добвления записи в таблицу!");
-    }
-    //fields_names.clear();
-    saveact->setEnabled(true);
-    revertact->setEnabled(true);
-}
-
-// отмена изменений в таблице
-void MedicinesWindow::clicked_on_reset(){
-    entity->setFilter("");
-    if (entity->rowCount() == 0) {
-        entity->select();
-    }
-    resetsrchact->setEnabled(false);
-    delfoundact->setEnabled(false);
-}
-
-// удаление всех найденных записей
-void MedicinesWindow::clicked_on_delete_found() {
-    if (entity->filter() == "") return;
-    QMessageBox* msgBox = new QMessageBox("Удаление найденных",
-                                          "Удалить все найденные записи?\n",
-                                          QMessageBox::Question,
-                                          QMessageBox::Button::Yes,
-                                          QMessageBox::Button::No,
-                                          QMessageBox::Button::Cancel,
-                                          this);
-    int resBtn = msgBox->exec();
-    qDebug() << entity->rowCount();
-    if (resBtn == QMessageBox::Yes) {
-        entity->removeRecords(0, entity->rowCount());
-        QMessageBox::information(this, "Успех!",
-                             "Все найденные записи помечены на удаление. "
-                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
         saveact->setEnabled(true);
         revertact->setEnabled(true);
     }

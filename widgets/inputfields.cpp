@@ -30,12 +30,18 @@ inputFields::~inputFields() {
     delete ui;
 }
 
+/*!
+ * \brief Метод излучения согнала о переходе назад.
+ * \details Сигнал получает основное окно.
+ */
 void inputFields::goback() {
     emit goback_signal(this);
 }
 
-// Создание объектов компоновки для полей и для кнопок
-// а также создание заголовка окна
+/*!
+ * \brief Создание объектов компоновки для полей и для кнопок
+ * а также создание заголовка окна
+ */
 void inputFields::buildLayout() {
     vlay = new QVBoxLayout(this);
     flay = new QFormLayout();
@@ -51,7 +57,18 @@ void inputFields::buildLayout() {
 }
 
 
-
+/*!
+ * \brief Конструктор формы для лекарств.
+ * \param titles - читаемые пользователем названия столбцов.
+ * \param fields - сопоставление "Имя столбца в БД"-"Читаемое пользователем название столбца".
+ * \param keys - список имён столбцов в БД в порядке,
+ * представленном в таблице(не отсортированном).
+ * \param impl - объект-обработчик полей формы, определяемый в соответствии с задачей
+ * (добавление, изменение или поиск).
+ * \param parent - родительский объект.
+ *
+ * \details В конструкторе создаются и размещаются в окне все элементы интерфейса.
+ */
 MedsAbstr::MedsAbstr(const QMap<QString, QString>& titles,
                        const QMap<QString, QString>& fields,
                        const QVector<QString>& keys,
@@ -75,7 +92,9 @@ MedsAbstr::~MedsAbstr() {
     qDebug() << "DEL MedsAbstr";
 }
 
-// нажание на кнопку выполнения операции
+/*!
+ * \brief Метод, выполняемый при нажании на кнопку выполнения операции.
+ */
 void MedsAbstr::exec_clicked() {
     // если нет ошибок, то объект реализации внутри
     // себя вызвал сигнал с нужным объектом
@@ -85,7 +104,9 @@ void MedsAbstr::exec_clicked() {
     }
 }
 
-// построение полей ввода данных
+/*!
+ * \brief Построение поля ввода имени производителя.
+ */
 void MedsAbstr::produceField1() {
     QLabel* label_1 = new QLabel(fields[keys[1]], this);
     label_1->setObjectName("label_1");
@@ -99,6 +120,9 @@ void MedsAbstr::produceField1() {
     label_1 = nullptr;
 }
 
+/*!
+ * \brief Построение поля ввода названия лекарства.
+ */
 void MedsAbstr::produceField2() {
     QLabel* label_2 = new QLabel(fields[keys[2]], this);
     label_2->setObjectName("label_2");
@@ -113,6 +137,9 @@ void MedsAbstr::produceField2() {
 
 }
 
+/*!
+ * \brief Построение поля ввода даты выпуска лекарства.
+ */
 void MedsAbstr::produceField3() {
     QLabel* label_3 = new QLabel(fields[keys[3]], this);
     label_3->setObjectName("label_3");
@@ -129,6 +156,9 @@ void MedsAbstr::produceField3() {
     label_3 = nullptr;
 }
 
+/*!
+ * \brief Построение поля ввода даты окончания срока годности лекарства.
+ */
 void MedsAbstr::produceField4() {
     QLabel* label_4 = new QLabel(fields[keys[4]], this);
     label_4->setObjectName("label_4");
@@ -145,6 +175,9 @@ void MedsAbstr::produceField4() {
     label_4 = nullptr;
 }
 
+/*!
+ * \brief Построение поля ввода типа лекарства (по рецепту или без него).
+ */
 void MedsAbstr::produceField5() {
     on_prescription = new QCheckBox(fields[keys[5]], this);
     on_prescription->setObjectName(keys[5]);
@@ -158,6 +191,9 @@ void MedsAbstr::produceField5() {
     //on_prescription = nullptr;
 }
 
+/*!
+ * \brief Построение поля ввода количества лекартсва.
+ */
 void MedsAbstr::produceField6() {
     QLabel* label_6 = new QLabel(fields[keys[6]], this);
     label_6->setObjectName("label_6");
@@ -174,6 +210,9 @@ void MedsAbstr::produceField6() {
     label_6 = nullptr;
 }
 
+/*!
+ * \brief Построение поля ввода цены лекарства.
+ */
 void MedsAbstr::produceField7() {
     QLabel* label_7 = new QLabel(fields[keys[7]], this);
     label_7->setObjectName("label_7");
@@ -190,6 +229,10 @@ void MedsAbstr::produceField7() {
     label_7 = nullptr;
 }
 
+/*!
+ * \brief Завершение построения интерфейса формы.
+ * \details Поля ввода и кнопки действий помещаются в вертикальный компоновщик.
+ */
 void MedsAbstr::finalization() {
     vlay->setSpacing(7);
     vlay->setContentsMargins(20, 20, 20 ,20);
@@ -210,6 +253,11 @@ void MedsAbstr::finalization() {
     vlay->addItem(hlay);
 }
 
+/*!
+ * \brief Заполнение полей, если форма предназначена для редактирования.
+ * \param record - объект записи.
+ * \param row - номер строки  в модели таблицы.
+ */
 void MedsAbstr::fill_fields(const QSqlRecord & record, const int row) {
     manufactorer->setText(record.field(keys[1]).value().toString());
     name->setText(record.field(keys[2]).value().toString());
@@ -221,7 +269,11 @@ void MedsAbstr::fill_fields(const QSqlRecord & record, const int row) {
     this->row = row;
 }
 
-// Реализация для окна ввода данных для добавления в таблицу
+/*!
+ * \brief Реализация для окна ввода данных для добавления в таблицу.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ */
 QString AddMedsImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     MedsAbstr* concreteAbs = qobject_cast<MedsAbstr*>(abs);
@@ -281,7 +333,12 @@ QString AddMedsImplement::processFields(inputFields* abs) {
 }
 
 
-// Реализация для окна ввода данных для поиска в таблице
+/*!
+ * \brief Реализация для окна ввода данных для поиска в таблице.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ * \return
+ */
 QString FindMedsImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     MedsAbstr* concreteAbs = qobject_cast<MedsAbstr*>(abs);
@@ -327,6 +384,11 @@ QString FindMedsImplement::processFields(inputFields * abs) {
     return NULL;
 }
 
+/*!
+ * \brief Реализация для окна ввода данных для изменения записи в таблице.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ */
 QString EditMedsImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     MedsAbstr* concreteAbs = qobject_cast<MedsAbstr*>(abs);
@@ -386,6 +448,18 @@ QString EditMedsImplement::processFields(inputFields* abs) {
 }
 
 
+/*!
+ * \brief Конструктор формы для бонусных карт.
+ * \param titles - читаемые пользователем названия столбцов.
+ * \param fields - сопоставление "Имя столбца в БД"-"Читаемое пользователем название столбца".
+ * \param keys - список имён столбцов в БД в порядке,
+ * представленном в таблице(не отсортированном).
+ * \param impl - объект-обработчик полей формы, определяемый в соответствии с задачей
+ * (добавление, изменение или поиск).
+ * \param parent - родительский объект.
+ *
+ * \details В конструкторе создаются и размещаются в окне все элементы интерфейса.
+ */
 BonusAbstr::BonusAbstr(const QMap<QString, QString>& titles,
                        const QMap<QString, QString>& fields,
                        const QVector<QString>& keys,
@@ -409,6 +483,9 @@ BonusAbstr::~BonusAbstr() {
     impl.reset();
 }
 
+/*!
+ * \brief Метод, выполняемый при нажании на кнопку выполнения операции.
+ */
 void BonusAbstr::exec_clicked() {
     QString error = impl->processFields(this);
     if (!error.isEmpty()) {
@@ -416,7 +493,9 @@ void BonusAbstr::exec_clicked() {
     }
 }
 
-// построение полей ввода данных
+/*!
+ * \brief Построение поля ввода номера бонусной карты.
+ */
 void BonusAbstr::produceField1() {
     QLabel* label_1 = new QLabel(fields[keys[0]], this);
     label_1->setObjectName("label_1");
@@ -433,6 +512,9 @@ void BonusAbstr::produceField1() {
     label_1 = nullptr;
 }
 
+/*!
+ * \brief Построение поля ввода имени клиента с бонусной картой.
+ */
 void BonusAbstr::produceField2() {
     QLabel* label_2 = new QLabel(fields[keys[1]], this);
     label_2->setObjectName("label_2");
@@ -447,6 +529,9 @@ void BonusAbstr::produceField2() {
 
 }
 
+/*!
+ * \brief Построение поля ввода колиечтсва бонусов на карте.
+ */
 void BonusAbstr::produceField3() {
     QLabel* label_3 = new QLabel(fields[keys[2]], this);
     label_3->setObjectName("label_3");
@@ -463,6 +548,10 @@ void BonusAbstr::produceField3() {
     label_3 = nullptr;
 }
 
+/*!
+ * \brief Завершение построения интерфейса формы.
+ * \details Поля ввода и кнопки действий помещаются в вертикальный компоновщик.
+ */
 void BonusAbstr::finalization() {
     vlay->setSpacing(7);
     vlay->setContentsMargins(20, 20, 20 ,20);
@@ -483,6 +572,11 @@ void BonusAbstr::finalization() {
     vlay->addItem(hlay);
 }
 
+/*!
+ * \brief Заполнение полей, если форма предназначена для редактирования.
+ * \param record - объект записи.
+ * \param row - номер строки в модели таблицы.
+ */
 void BonusAbstr::fill_fields(const QSqlRecord & record, const int row) {
     card_number->setText(record.field(keys[0]).value().toString());
     name->setText(record.field(keys[1]).value().toString());
@@ -490,7 +584,11 @@ void BonusAbstr::fill_fields(const QSqlRecord & record, const int row) {
     this->row = row;
 }
 
-// Реализация для окна ввода данных для добавления в таблицу
+/*!
+ * \brief Реализация для окна ввода данных для добавления в таблицу.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ */
 QString AddBonusImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     BonusAbstr* concreteAbs = qobject_cast<BonusAbstr*>(abs);
@@ -527,7 +625,12 @@ QString AddBonusImplement::processFields(inputFields* abs) {
 }
 
 
-// Реализация для окна ввода данных для поиска в таблице
+/*!
+ * \brief Реализация для окна ввода данных для поиска в таблице.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ * \return
+ */
 QString FindBonusImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     BonusAbstr* concreteAbs = qobject_cast<BonusAbstr*>(abs);
@@ -555,6 +658,11 @@ QString FindBonusImplement::processFields(inputFields * abs) {
     return NULL;
 }
 
+/*!
+ * \brief Реализация для окна ввода данных для изменения записи в таблице.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ */
 QString EditBonusImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     BonusAbstr* concreteAbs = qobject_cast<BonusAbstr*>(abs);
@@ -590,6 +698,19 @@ QString EditBonusImplement::processFields(inputFields* abs) {
     return NULL;
 }
 
+
+/*!
+ * \brief Конструктор формы для истории продаж.
+ * \param titles - читаемые пользователем названия столбцов.
+ * \param fields - сопоставление "Имя столбца в БД"-"Читаемое пользователем название столбца".
+ * \param keys - список имён столбцов в БД в порядке,
+ * представленном в таблице(не отсортированном).
+ * \param impl - объект-обработчик полей формы, определяемый в соответствии с задачей
+ * (добавление, изменение или поиск).
+ * \param parent - родительский объект.
+ *
+ * \details В конструкторе создаются и размещаются в окне все элементы интерфейса.
+ */
 SellAbstr::SellAbstr(const QMap<QString, QString>& titles,
                        const QMap<QString, QString>& fields,
                        const QVector<QString>& keys,
@@ -619,6 +740,9 @@ SellAbstr::~SellAbstr() {
     impl.reset();
 }
 
+/*!
+ * \brief Метод, выполняемый при нажании на кнопку выполнения операции.
+ */
 void SellAbstr::exec_clicked() {
     QString error = impl->processFields(this);
     if (!error.isEmpty()) {
@@ -626,6 +750,9 @@ void SellAbstr::exec_clicked() {
     }
 }
 
+/*!
+ * \brief Построение поля ввода даты продажи.
+ */
 void SellAbstr::produceField1() {
     QLabel* label_1 = new QLabel(fields[keys[1]], this);
     label_1->setObjectName("label_1");
@@ -641,6 +768,9 @@ void SellAbstr::produceField1() {
     flay->addRow(label_1, date_of_buy);
 }
 
+/*!
+ * \brief Построение поля выбора бонусной карты покупателя.
+ */
 void SellAbstr::produceField2() {
     QLabel* label_2 = new QLabel(fields[keys[2]], this);
     label_2->setObjectName("label_2");
@@ -663,6 +793,9 @@ void SellAbstr::produceField2() {
 
 }
 
+/*!
+ * \brief Построение поля выбора купленного лекарства.
+ */
 void SellAbstr::produceField3() {
     QLabel* label_3 = new QLabel(fields[keys[3]], this);
     label_3->setObjectName("label_3");
@@ -678,11 +811,14 @@ void SellAbstr::produceField3() {
         medicines->addItem(*it);
     }
     medicines->setMinimumHeight(30);
-    connect(medicines, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::med_changed);
+    connect(medicines, QOverload<const QString&>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::med_changed);
     flay->addRow(label_3, medicines);
     label_3 = nullptr;
 }
 
+/*!
+ * \brief Построение поля ввода количества купленного лекартсва.
+ */
 void SellAbstr::produceField4() {
     QLabel* label_4 = new QLabel(fields[keys[4]], this);
     label_4->setObjectName("label_4");
@@ -693,11 +829,15 @@ void SellAbstr::produceField4() {
     pieces->setStyleSheet("QSpinBox { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
     pieces->setMinimumHeight(30);
     pieces->setMaximumWidth(50);
+    connect(pieces, QOverload<int>::of(&QSpinBox::valueChanged), this, &SellAbstr::med_amount_changed);
     pieces->setMinimum(1);
     flay->addRow(label_4, pieces);
     label_4 = nullptr;
 }
 
+/*!
+ * \brief Построение поля с выручкой.
+ */
 void SellAbstr::produceField5() {
     QLabel* label_5 = new QLabel(fields[keys[5]], this);
     label_5->setObjectName("label_5");
@@ -706,6 +846,7 @@ void SellAbstr::produceField5() {
     earnings->setObjectName(keys[5]);
     earnings->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
     earnings->setMinimumHeight(30);
+    earnings->setEnabled(false);
     QRegularExpression regexp("[+]?\\d{1,20}([.,]\\d{1,2})?");
     QValidator* valid = new QRegularExpressionValidator(regexp, this);
     earnings->setValidator(valid);
@@ -713,6 +854,10 @@ void SellAbstr::produceField5() {
     label_5 = nullptr;
 }
 
+/*!
+ * \brief Завершение построения интерфейса формы.
+ * \details Поля ввода и кнопки действий помещаются в вертикальный компоновщик.
+ */
 void SellAbstr::finalization() {
     vlay->setSpacing(7);
     vlay->setContentsMargins(20, 20, 20 ,20);
@@ -733,19 +878,58 @@ void SellAbstr::finalization() {
     vlay->addItem(hlay);
 }
 
-void SellAbstr::med_changed(int index) {
-    if (index == 0) {
+/*!
+ * \brief Метод изменения параметров выбора количества лекартсва.
+ * \param med_id - выбранный айди лекарства.
+ * \details Вызывается при смене выбранного лекарства. Выставляет
+ * максимальное допустимое значение лекарства в соответствии с количеством
+ * этого лекарства на складе. Также меняет значение в поле выручки.
+ */
+void SellAbstr::med_changed(const QString& med_id) {
+    if (medicines->currentIndex() == 0) {
         pieces->setEnabled(false);
         return;
     }
     pieces->setEnabled(true);
     int amount = 0;
-    if (!entity->get_med_amount(index, amount) || amount == 0) {
+    //int price = 0;
+    if (!entity->get_med_amount(med_id.toInt(), amount)) {
         pieces->setMinimum(0);
+        pieces->setMaximum(0);
+        basic_price = -1;
+        current_unit_price = -1;
     }
-    pieces->setMaximum(amount);
+    else {
+        pieces->setMaximum(amount);
+        if (entity->get_med_price(med_id.toInt(), current_unit_price)) {
+            basic_price = current_unit_price * pieces->value();
+        } else {
+            basic_price = -1;
+            current_unit_price = -1;
+        }
+    }
+    if (earnings) earnings->setText(QString::number(basic_price));
 }
 
+/*!
+ * \brief Метод изменения содержащейся суммы в поле выручки.
+ * \param value - выбранное количество лекарства.
+ */
+void SellAbstr::med_amount_changed(int value) {
+    if (current_unit_price >= 0) {
+        basic_price = current_unit_price * value;
+    }
+    else {
+        basic_price = -1;
+    }
+    if (earnings) earnings->setText(QString::number(basic_price));
+}
+
+/*!
+ * \brief Заполнение полей, если форма предназначена для редактирования.
+ * \param record - объект записи.
+ * \param row - номер строки в модели таблицы.
+ */
 void SellAbstr::fill_fields(const QSqlRecord & record, const int row) {
     date_of_buy->setText(record.field(keys[1]).value().toString());
     customer->setCurrentText(record.field(keys[2]).value().toString());
@@ -755,7 +939,11 @@ void SellAbstr::fill_fields(const QSqlRecord & record, const int row) {
     this->row = row;
 }
 
-// Реализация для окна ввода данных для добавления в таблицу
+/*!
+ * \brief Реализация для окна ввода данных для добавления в таблицу.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ */
 QString AddSellImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
@@ -810,7 +998,12 @@ QString AddSellImplement::processFields(inputFields* abs) {
 }
 
 
-// Реализация для окна ввода данных для поиска в таблице
+/*!
+ * \brief Реализация для окна ввода данных для поиска в таблице.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ * \return
+ */
 QString FindSellImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
@@ -841,6 +1034,11 @@ QString FindSellImplement::processFields(inputFields * abs) {
     return NULL;
 }
 
+/*!
+ * \brief Реализация для окна ввода данных для изменения записи в таблице.
+ * \param abs - объект окна формы с введёнными данными.
+ * \return текст ошибки.
+ */
 QString EditSellImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);

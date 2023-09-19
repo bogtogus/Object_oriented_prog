@@ -129,9 +129,11 @@ private:
     QComboBox* customer;
     QComboBox* medicines;
     QSpinBox* pieces;
-    QLineEdit* earnings;
+    QLineEdit* earnings = nullptr;
     QHBoxLayout* hlay;
     const SellEntity* entity;
+    int basic_price;
+    int current_unit_price;
 
     int row;
     void exec_clicked() override;
@@ -141,7 +143,8 @@ private:
     void produceField4();
     void produceField5();
     void finalization();
-    void med_changed(int);
+    void med_changed(const QString&);
+    void med_amount_changed(int);
     void fill_fields(const QSqlRecord&, const int) override;
 
     friend class AddSellImplement;

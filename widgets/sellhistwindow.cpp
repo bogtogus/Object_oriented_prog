@@ -7,6 +7,13 @@
 #include <QToolBar>
 
 
+/*!
+ * \brief Конструктор окна.
+ * \param parent - родительский объект (обычно главное окно).
+ * \param me - объект сущности лекарств.
+ * \param be - объект сущности бонусных карт.
+ * \param se - объект сущности истории продаж.
+ */
 SellHistWindow::SellHistWindow(QWidget *parent,
                                MedsEntity* me,
                                BonusEntity* be,
@@ -47,8 +54,12 @@ SellHistWindow::~SellHistWindow() {
     delete ui;
 }
 
-// Реагирование на изменение размеров окна
-// задание нужной ширины каждого столбца таблицы
+/*!
+ * \brief Реагирование на изменение размеров окна.
+ * Производится задание нужной ширины каждого столбца таблицы.
+ * Метод вызывается автоматически по сигналу.
+ * \param event - событие изменения размеров окна.
+ */
 void SellHistWindow::resizeEvent(QResizeEvent *event) {
     ui->table->setColumnWidth(0, 20);
     if (SEntity->columnCount() == 1) return;
@@ -60,6 +71,10 @@ void SellHistWindow::resizeEvent(QResizeEvent *event) {
     //ui->table->resizeRowsToContents();
 }
 
+/*!
+ * \brief Инициализация табличного представления, а именно
+ * передача ему модели таблицы, а также настройка нескольких параметров представления.
+ */
 void SellHistWindow::init_table() {
     QHeaderView* header = ui->table->horizontalHeader();
     header->setSectionResizeMode(QHeaderView::Interactive);
@@ -72,6 +87,9 @@ void SellHistWindow::init_table() {
     ui->table->setModel(SEntity->get_model());
 }
 
+/*!
+ * \brief Метод привязки всех методов меню к соответствующим методам класса.
+ */
 void SellHistWindow::connect_menu() {
     connect(backact, &QAction::triggered, this, &SellHistWindow::goback);
     connect(addact, &QAction::triggered, this, &SellHistWindow::clicked_on_add);
@@ -85,7 +103,11 @@ void SellHistWindow::connect_menu() {
     connect(revertact, &QAction::triggered, this, &SellHistWindow::clicked_on_revert);
 }
 
-// нажание на кнопку возврата назад
+/*!
+ * \brief Метод возврата назад.
+ * При несохранённых изменениях просит подтверждения действия.
+ * Переход назад осуществляется излучением сигнала goback_signal(...) для главного окна.
+ */
 void SellHistWindow::goback() {
     if (SEntity->isDirty()) {
         QMessageBox* msgBox = new QMessageBox("Возврат назад",
@@ -107,12 +129,21 @@ void SellHistWindow::goback() {
     }
 }
 
+/*!
+ * \brief Метод, вызываемый при закрытии основного окна.
+ * \param event - событие закрытия окна.
+ */
 void SellHistWindow::closeEvent(QCloseEvent *event) {
     qDebug() << "close SellHistWindow";
     event->accept();
 }
 
-// переход к форме добавления записи
+/*!
+ * \brief Переход к форме добавления записи в таблицу.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом добавления записи в таблицу.
+ */
 void SellHistWindow::clicked_on_add() {
     qDebug() << fields;
     impl = QSharedPointer<Implement>(new AddSellImplement());
@@ -127,7 +158,10 @@ void SellHistWindow::clicked_on_add() {
     emit summoned_child(InFAbs);
 }
 
-// добавление записи
+/*!
+ * \brief Добавление записи по данным, полученным из окна заполнения данных.
+ * \param record - сформированная запись.
+ */
 void SellHistWindow::add_record_db(const QSqlRecord* record) {
     int med_id = record->value(keys[3]).toInt();
     int sell_count = record->value(keys[4]).toInt();
@@ -170,7 +204,137 @@ void SellHistWindow::add_record_db(const QSqlRecord* record) {
     revertact->setEnabled(true);
 }
 
-// удаление выбранных строк
+
+/*!
+ * \brief Переход к форме редактирования записи в таблице.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом изменения записи в таблице.
+ */
+void SellHistWindow::clicked_on_edit() {
+    impl = QSharedPointer<Implement>(new EditSellImplement());
+    QItemSelectionModel* selection = ui->table->selectionModel();
+    int row = selection->selectedIndexes().at(0).row();
+    QSqlRecord record = SEntity->get_record(row);
+    QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
+    InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
+    InFAbs->fill_fields(record, row);
+    titles.clear();
+    connect(impl.get(),
+            QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
+            this,
+            &SellHistWindow::edit_record_db);
+    impl.reset();
+    emit summoned_child(InFAbs);
+}
+
+/*!
+ * \brief Изменение записи согласно данным, полученным из окна заполнения данных.
+ * \param record - сформированная новая запись.
+ * \param row - строка в модели таблицы, где находится старая запись.
+ */
+void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
+    if (SEntity->setRecord(row, record)) {
+        QMessageBox::information(this, "Успех!",
+                             "Введённая запись отредактирована. "
+                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+    }
+    else {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Ошибка добвления записи в таблицу!");
+    }
+    //fields_names.clear();
+    saveact->setEnabled(true);
+    revertact->setEnabled(true);
+}
+
+/*!
+ * \brief Переход к форме поиска записи в таблице.
+ * Поиск осуществляется по любому полю.
+ * \details Инициализируется объект, проверяющий корректность ввода данных в форму.
+ * Затем создаётся объект, генерирующий форму согласно полям таблицы.
+ * Связывается сигнал отправки данных из формы с методом добавления записи в таблицу.
+ */
+void SellHistWindow::clicked_on_find() {
+    impl = QSharedPointer<Implement>(new FindSellImplement());
+    QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
+    InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
+    connect(impl.get(),
+            QOverload<const QString&>::of(&Implement::exec_clicked_signal),
+            this,
+            &SellHistWindow::find_record_db);
+    impl.reset();
+    emit summoned_child(InFAbs);
+}
+
+/*!
+ * \brief Установка фильтра для модели согласно запросу по полям записи.
+ * \param where - SQL-запрос типа "WHERE ..."
+ */
+void SellHistWindow::find_record_db(const QString& where) {
+    qDebug() << where;
+    SEntity->setFilter(where);
+    resetsrchact->setEnabled(true);
+    if (SEntity->rowCount() == 0) {
+        QMessageBox::warning(this, "Ошибка!",
+                             "По заданному запросу ничего не найдено!");
+    }
+    else {
+        InFAbs->goback();
+        delfoundact->setEnabled(true);
+    }
+}
+
+
+/*!
+ * \brief Подтверждение изменений в таблице.
+ */
+void SellHistWindow::clicked_on_submit() {
+    if (!SEntity->submitAll()) {
+        qDebug() << SEntity->lastError();
+    }
+    else {
+        if (first_add >= 0) {
+            QMap<int, int> ::iterator it = temp_sales.begin();
+            for (; it != temp_sales.end(); it++) {
+                qDebug() << *it;
+                if (!MEntity->update_record(it.key(), it.value())) {
+                    qDebug() << MEntity->lastError();
+                }
+            }
+        }
+        revertact->setEnabled(false);
+        saveact->setEnabled(false);
+    }
+}
+
+/*!
+ * \brief Отмена изменений в таблице.
+ */
+void SellHistWindow::clicked_on_revert() {
+    temp_sales.clear();
+    revertact->setEnabled(false);
+    saveact->setEnabled(false);
+    SEntity->revertAll();
+}
+
+/*!
+ * \brief Сброс поиска по таблице.
+ */
+void SellHistWindow::clicked_on_reset(){
+    SEntity->setFilter("");
+    if (SEntity->rowCount() == 0) {
+        SEntity->select();
+    }
+    resetsrchact->setEnabled(false);
+    delfoundact->setEnabled(false);
+}
+
+/*!
+ * \brief Удаление записи или нескольих записей, выделенных в таблице.
+ * \brief Согласно размеру списка выделенных записей запрашивается подтверждение на удаление,
+ * а затем и удаление выделенных записей.
+ */
 void SellHistWindow::clicked_on_delete_selected() {
     QItemSelectionModel* selection = ui->table->selectionModel();
     QModelIndexList selection_list(selection->selectedIndexes());
@@ -211,105 +375,9 @@ void SellHistWindow::clicked_on_delete_selected() {
     }
 }
 
-void SellHistWindow::clicked_on_edit() {
-    impl = QSharedPointer<Implement>(new EditSellImplement());
-    QItemSelectionModel* selection = ui->table->selectionModel();
-    int row = selection->selectedIndexes().at(0).row();
-    QSqlRecord record = SEntity->get_record(row);
-    QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
-    InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
-    InFAbs->fill_fields(record, row);
-    titles.clear();
-    connect(impl.get(),
-            QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
-            this,
-            &SellHistWindow::edit_record_db);
-    impl.reset();
-    emit summoned_child(InFAbs);
-}
-
-// подтверждение изменений в таблице
-void SellHistWindow::clicked_on_submit() {
-    if (!SEntity->submitAll()) {
-        qDebug() << SEntity->lastError();
-    }
-    else {
-        if (first_add >= 0) {
-            QMap<int, int> ::iterator it = temp_sales.begin();
-            for (; it != temp_sales.end(); it++) {
-                qDebug() << *it;
-                if (!MEntity->update_record(it.key(), it.value())) {
-                    qDebug() << MEntity->lastError();
-                }
-            }
-        }
-        revertact->setEnabled(false);
-        saveact->setEnabled(false);
-    }
-}
-
-// отмена изменений в таблице
-void SellHistWindow::clicked_on_revert() {
-    temp_sales.clear();
-    revertact->setEnabled(false);
-    saveact->setEnabled(false);
-    SEntity->revertAll();
-}
-
-// переход к форме поиска записи
-void SellHistWindow::clicked_on_find() {
-    impl = QSharedPointer<Implement>(new FindSellImplement());
-    QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
-    InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
-    connect(impl.get(),
-            QOverload<const QString&>::of(&Implement::exec_clicked_signal),
-            this,
-            &SellHistWindow::find_record_db);
-    impl.reset();
-    emit summoned_child(InFAbs);
-}
-
-// установка фильтра по введённым данным в поля
-void SellHistWindow::find_record_db(const QString& where) {
-    qDebug() << where;
-    SEntity->setFilter(where);
-    resetsrchact->setEnabled(true);
-    if (SEntity->rowCount() == 0) {
-        QMessageBox::warning(this, "Ошибка!",
-                             "По заданному запросу ничего не найдено!");
-    }
-    else {
-        InFAbs->goback();
-        delfoundact->setEnabled(true);
-    }
-}
-
-void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
-    if (SEntity->setRecord(row, record)) {
-        QMessageBox::information(this, "Успех!",
-                             "Введённая запись отредактирована. "
-                             "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
-    }
-    else {
-        QMessageBox::warning(this, "Ошибка!",
-                             "Ошибка добвления записи в таблицу!");
-    }
-    //fields_names.clear();
-    saveact->setEnabled(true);
-    revertact->setEnabled(true);
-}
-
-// сброс поиска
-void SellHistWindow::clicked_on_reset(){
-    SEntity->setFilter("");
-    if (SEntity->rowCount() == 0) {
-        SEntity->select();
-    }
-    resetsrchact->setEnabled(false);
-    delfoundact->setEnabled(false);
-}
-
-// удаление всех найденных записей
+/*!
+ * \brief Удаление всех найденных записей.
+ */
 void SellHistWindow::clicked_on_delete_found() {
     if (SEntity->filter() == "") return;
     QMessageBox* msgBox = new QMessageBox("Удаление найденных",

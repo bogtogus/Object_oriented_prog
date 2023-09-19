@@ -231,16 +231,44 @@ MedsEntity::~MedsEntity() {
 bool MedsEntity::get_med_amount(const int id, int& result) const {
     QSqlQuery query(db->connectionName());
     int count = 0;
-    query.prepare("SELECT pieces FROM medicines WHERE id = " + QString::number(id));
+    bool succeed = false;
+    query.prepare("SELECT pieces FROM medicines WHERE id = :id");
+    query.bindValue(":id", id);
     if (query.exec()) {
+        qDebug() << query.executedQuery();
         query.first();
         count = query.value(0).toInt();
-        query.finish();
         result = count;
-        return true;
+        succeed = true;
     }
     else {
         result = -1;
+        succeed = false;
+    }
+    query.finish();
+    return succeed;
+}
+
+/*!
+ * \brief Получение цены лекарства по его айди.
+ * \param id - айди лекартсва.
+ * \param price - возвращаемая цена лекарства.
+ * \return успешность операции.
+ */
+int MedsEntity::get_med_price(const int id, int &price) const {
+    QSqlQuery query(db->connectionName());
+    query.prepare("SELECT price_for_one FROM medicines WHERE id = :id");
+    query.bindValue(":id", id);
+    if (query.exec()) {
+        qDebug() << query.executedQuery() << " " << id;
+        query.first();
+        int temp = query.value(0).toInt();
+        query.finish();
+        price = temp;
+        return true;
+    }
+    else {
+        price = -1;
         query.finish();
         return false;
     }
@@ -253,10 +281,11 @@ bool MedsEntity::get_med_amount(const int id, int& result) const {
  * \return успешность операции.
  */
 bool MedsEntity::update_record(const int id, const int pieces) {
+    if (pieces < 0) return false;
     QSqlQuery query(db->connectionName());
-    query.prepare("UPDATE medicines SET pieces = " +
-                  QString::number(pieces) +
-                  " WHERE id = " + QString::number(id));
+    query.prepare("UPDATE medicines SET pieces = :pieces WHERE id = :id");
+    query.bindValue(":pieces", pieces);
+    query.bindValue(":id", id);
     bool ret = query.exec();
     query.finish();
     return ret;
@@ -379,11 +408,21 @@ QVector<QString> SellEntity::get_all_ids() const {
 }
 
 /*!
- * \brief Получение количество лекарства с заданным id.
+ * \brief Получение количества лекарства с заданным id.
  * \param id - айди.
  * \param amount - количество лекарства.
  * \return успешность операции.
  */
 bool SellEntity::get_med_amount(const int id, int& amount) const {
     return meds->get_med_amount(id, amount);
+}
+
+/*!
+ * \brief Получение стоимости лекарства с заданным id.
+ * \param id - айди.
+ * \param amount - стоимость лекарства.
+ * \return успешность операции.
+ */
+int SellEntity::get_med_price(const int id, int &price) const {
+    return meds->get_med_price(id, price);
 }

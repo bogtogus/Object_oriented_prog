@@ -1,6 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+/*!
+ * \brief Конструктор главного окна.
+ * \param parent - родительский объект.
+ * \details Инициализируется интерфейс, производится подключение к БД,
+ * загружаются настройки из файла настроек.
+ */
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -39,11 +45,15 @@ MainWindow::MainWindow(QWidget *parent)
     //ui->drugery_logo->setMaximumSize(ui->drugery_logo->minimumHeight(), ui->drugery_logo->minimumHeight());
 }
 
+/*!
+ * \brief Деструктор объекта главного окна.
+ * \details Приложение отключается от БД, сохраняются настройки в файл настроек.
+ */
 MainWindow::~MainWindow() {
     qDebug() << "DEL main {{";
-    delete BEntity;
-    delete MEntity;
-    delete SEntity;
+    if (BEntity) delete BEntity;
+    if (MEntity) delete MEntity;
+    if (SEntity) delete SEntity;
     if (db->isOpen()) {
         qDebug() << "close db";
         db->close();
@@ -57,11 +67,15 @@ MainWindow::~MainWindow() {
     qDebug() << db->connectionNames();
 
     saveSettings();
-    delete ui;
+    if (ui) delete ui;
     qDebug() << "}}";
 }
 
-// Обработка нажания на кнопку закрытия окна [X]
+/*!
+ * \brief Обработка нажания на кнопку закрытия окна [X].
+ * \param event - событие закрытия окна.
+ * \details Запрашивается подтверждение закрытия окна.
+ */
 void MainWindow::closeEvent(QCloseEvent *event) {
     QMessageBox::StandardButton resBtn = QMessageBox::question( this, "Выход",
                                                                 "Выйти из приложения? Все несохранённые изменения будут отменены.\n",
@@ -89,30 +103,44 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     }
 }
 
-// Загрузка настроек
+/*!
+ * \brief Загрузка настроек.
+ */
 void MainWindow::loadSettings() {
     this->logo = new QPixmap(":/images/apteka.png");
     this->resize(settings->value("window_size", QSize(400, 400)).toSize());
 }
 
-// Сохранение
+/*!
+ * \brief Сохранение настроек.
+ */
 void MainWindow::saveSettings() {
     settings->setValue("logotype", settings->value("logotype", "images/apteka.png"));
     settings->setValue("window_size", QSize(std::max(this->minimumSize().width(), this->geometry().width()),
                                             std::max(this->minimumSize().height(),this->geometry().height())));
 }
 
-// Получения пути к файлам проекта
+/*!
+ * \brief Получение пути к файлам проекта.
+ * \return путь к файлам проекта.
+ */
 QDir MainWindow::getCurPath() const {
     return *path;
 }
 
-// Получение указателя на базу данных
+/*!
+ * \brief Получение указателя на базу данных.
+ * \return Указатель на базу данных.
+ */
 QSharedPointer<QSqlDatabase> MainWindow::getDB() const {
     return this->db;
 }
 
-// Инициализация базы данных
+/*!
+ * \brief Инициализация подключения к базе данных.
+ * \details Пр отсутствии файла базы данных он создаётся,
+ * а также создаются необходимые таблицы.
+ */
 void MainWindow::initDB() {
     qDebug() << "open db";
     this->db = QSharedPointer<QSqlDatabase>(new QSqlDatabase(QSqlDatabase::addDatabase("QSQLITE")));
@@ -208,20 +236,32 @@ void MainWindow::initDB() {
     SEntity = new SellEntity(db, Sfn, MEntity, BEntity);
 }
 
+/*!
+ * \brief Переход к окну работы с лекарствами.
+ */
 void MainWindow::tomedicines_clicked() {
     push_back_widget(new MedicinesWindow(this, MEntity));
 }
 
+/*!
+ * \brief Переход к окну работы с бонусными картами.
+ */
 void MainWindow::tobonusprogram_clicked() {
     push_back_widget(new BonusProgWindow(this, BEntity));
 }
 
+/*!
+ * \brief Переход к окну работы с историей продаж.
+ */
 void MainWindow::tosellhistory_clicked() {
     push_back_widget(new SellHistWindow(this, MEntity, BEntity, SEntity));
 }
 
-// Удаление отображаемого виджета из QStackedWidget
-// и разъединение с сигналами этого виджета
+/*!
+ * \brief Удаление отображаемого окна-виджета из QStackedWidget
+ * и разъединение с сигналами этого окна-виджета.
+ * \param widget - удаляемое окно-виджет. Является отображаемым на данный момент.
+ */
 void MainWindow::pop_back_widget(aChildWin* widget) {
     qDebug() << "close childw ( ";
     if (ui->stackedWidget->indexOf(widget) >= 0) {
@@ -235,9 +275,13 @@ void MainWindow::pop_back_widget(aChildWin* widget) {
     qDebug() << ")";
 }
 
-// Добавление нового(дочернего) виджета в QStackedWidget
-// и соединение с его сигнала о возврате назад и вызове
-// своего дочернего окна
+/*!
+ * \brief Отображение нового окна-виджета.
+ * \param widget - дочернее окно-виджет.
+ * \details Добавление нового(дочернего) виджета в QStackedWidget
+ * и соединение с его сигнала о возврате назад и вызове
+ * своего дочернего окна.
+ */
 void MainWindow::push_back_widget(aChildWin* widget) {
     qDebug() << "open childw (";
     if (ui->stackedWidget->indexOf(widget) < 0) {
@@ -251,7 +295,9 @@ void MainWindow::push_back_widget(aChildWin* widget) {
     qDebug() << ")";
 }
 
-// О бонусной программе
+/*!
+ * \brief Окно информации о бонусной программе.
+ */
 void MainWindow::on_aboutbonuses_clicked() {
     QMessageBox* about = new QMessageBox(this);
     QFont* font = new QFont();
@@ -269,7 +315,7 @@ void MainWindow::on_aboutbonuses_clicked() {
     about->setWindowIcon(QIcon(*px));
     about->setIcon(QMessageBox::Information);
     about->exec();
-    delete font;
-    delete about;
-    delete px;
+    if (font) delete font;
+    if (about) delete about;
+    if (px) delete px;
 }
