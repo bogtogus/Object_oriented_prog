@@ -8,7 +8,16 @@
 #include <QAbstractItemView>
 
 
-
+class SqlTableModel_Currency : public QSqlTableModel {
+Q_OBJECT
+private:
+    int price_column;
+public:
+    SqlTableModel_Currency(QObject* parent = nullptr, QSqlDatabase db = QSqlDatabase(), const int price_column = -1);
+    ~SqlTableModel_Currency();
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+    void setCurrencyColumn(const int column);
+};
 
 /*!
  * \brief Базовый класс сущности с основным набором реализованных методов.
@@ -20,7 +29,7 @@ protected:
     // Указатель на БД
     QSharedPointer<QSqlDatabase> db;
     // Модель представления таблицы
-    QSqlTableModel* model;
+    SqlTableModel_Currency* model;
     // Названия столбцов
     QVector<QString> field_names;
 public:

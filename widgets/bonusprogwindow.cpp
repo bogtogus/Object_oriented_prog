@@ -110,6 +110,7 @@ void BonusProgWindow::init_table() {
     header = nullptr;
     ui->table->setColumnWidth(0, 20);
     ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->table->setSelectionBehavior(QAbstractItemView::SelectRows);
 }
 
 /*!

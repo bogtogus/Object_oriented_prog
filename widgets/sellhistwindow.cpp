@@ -85,6 +85,7 @@ void SellHistWindow::init_table() {
     ui->table->setColumnWidth(0, 20);
     ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->table->setModel(SEntity->get_model());
+    ui->table->setSelectionBehavior(QAbstractItemView::SelectRows);
 }
 
 /*!

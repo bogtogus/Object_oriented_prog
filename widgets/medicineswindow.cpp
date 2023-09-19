@@ -75,6 +75,7 @@ void MedicinesWindow::init_table() {
     ui->table->setModel(entity->get_model());
     ui->table->setColumnWidth(0, 20);
     ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->table->setSelectionBehavior(QAbstractItemView::SelectRows);
     QHeaderView* header = ui->table->horizontalHeader();
     header->setSectionResizeMode(QHeaderView::Interactive);
     header->setDefaultAlignment(Qt::AlignCenter | (Qt::Alignment)Qt::TextWordWrap);

@@ -265,7 +265,15 @@ void MedsAbstr::fill_fields(const QSqlRecord & record, const int row) {
     expiry_date->setText(record.field(keys[4]).value().toString());
     on_prescription->setChecked(record.field(keys[5]).value().toBool());
     pieces->setText(record.field(keys[6]).value().toString());
-    price->setText(record.field(keys[7]).value().toString());
+    QString val = record.field(keys[7]).value().toString();
+    int length = val.length();
+    if (length > 2) {
+        val.insert(length - 2, '.');
+    }
+    else {
+        val.push_front("0.");
+    }
+    price->setText(val);
     this->row = row;
 }
 
@@ -325,7 +333,8 @@ QString AddMedsImplement::processFields(inputFields* abs) {
         rec->append(QSqlField(concreteAbs->keys[6]));
         rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
         rec->append(QSqlField(concreteAbs->keys[7]));
-        rec->setValue(concreteAbs->keys[7], concreteAbs->price->text());
+        int val = concreteAbs->price->text().remove('.').remove(',').toInt();
+        rec->setValue(concreteAbs->keys[7], val);
         emit Implement::exec_clicked_signal(rec);
         delete rec;
     }
@@ -365,12 +374,13 @@ QString FindMedsImplement::processFields(inputFields * abs) {
                 " = 1 AND ";
     }
     if (!concreteAbs->pieces->text().isEmpty() &&
-            !concreteAbs->pieces->hasAcceptableInput()) {
+            concreteAbs->pieces->hasAcceptableInput()) {
         where += concreteAbs->pieces->objectName() +
                 " = \"" + concreteAbs->pieces->text() + "\" AND ";
     }
+    qDebug() << concreteAbs->price->hasAcceptableInput();
     if (!concreteAbs->price->text().isEmpty() &&
-            !concreteAbs->price->hasAcceptableInput()) {
+            concreteAbs->price->hasAcceptableInput()) {
         where += concreteAbs->price->objectName() +
                 " = \"" + concreteAbs->price->text() + "\" AND ";
     }
@@ -440,7 +450,8 @@ QString EditMedsImplement::processFields(inputFields* abs) {
         rec->append(QSqlField(concreteAbs->keys[6]));
         rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
         rec->append(QSqlField(concreteAbs->keys[7]));
-        rec->setValue(concreteAbs->keys[7], concreteAbs->price->text());
+        int val = concreteAbs->price->text().remove('.').remove(',').toInt();
+        rec->setValue(concreteAbs->keys[7], val);
         emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
         delete rec;
     }
@@ -908,7 +919,8 @@ void SellAbstr::med_changed(const QString& med_id) {
             current_unit_price = -1;
         }
     }
-    if (earnings) earnings->setText(QString::number(basic_price));
+    if (earnings) earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
+                                    .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
 }
 
 /*!
@@ -922,7 +934,8 @@ void SellAbstr::med_amount_changed(int value) {
     else {
         basic_price = -1;
     }
-    if (earnings) earnings->setText(QString::number(basic_price));
+    if (earnings) earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
+                                    .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
 }
 
 /*!
@@ -935,7 +948,15 @@ void SellAbstr::fill_fields(const QSqlRecord & record, const int row) {
     customer->setCurrentText(record.field(keys[2]).value().toString());
     medicines->setCurrentText(record.field(keys[3]).value().toString());
     pieces->setValue(record.field(keys[4]).value().toLongLong());
-    earnings->setText(record.field(keys[5]).value().toString());
+    QString val = record.field(keys[5]).value().toString();
+    int length = val.length();
+    if (length > 2) {
+        val.insert(length - 2, '.');
+    }
+    else {
+        val.push_front("0.");
+    }
+    earnings->setText(val);
     this->row = row;
 }
 

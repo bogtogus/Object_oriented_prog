@@ -12,7 +12,6 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    qDebug() << "C: " << ui->stackedWidget->count();
     QDir tempdir = QDir().currentPath();
     this->path = new QDir(tempdir);
     // Задание текущего пути как абсолютного пути
@@ -40,7 +39,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->tomedicines, &QPushButton::clicked, this, &MainWindow::tomedicines_clicked);
     connect(ui->tobonusprogram, &QPushButton::clicked, this, &MainWindow::tobonusprogram_clicked);
     connect(ui->tosellhistory, &QPushButton::clicked, this, &MainWindow::tosellhistory_clicked);
-    qDebug() << "C: " << ui->stackedWidget->count();
     //ui->drugery_logo->setMinimumSize(ui->drugery_logo->minimumHeight(), ui->drugery_logo->minimumHeight());
     //ui->drugery_logo->setMaximumSize(ui->drugery_logo->minimumHeight(), ui->drugery_logo->minimumHeight());
 }
@@ -165,6 +163,7 @@ void MainWindow::initDB() {
                  "price_for_one INTEGER NOT NULL DEFAULT (0) CHECK (price_for_one >= 0)"
                  ");";
     QSqlQuery* query = new QSqlQuery(this->db->connectionName());
+    query->prepare(qu);
     if(!query->exec(qu)) {
         qDebug() << "Error when creating table \"medicines\".";
     }
@@ -176,6 +175,7 @@ void MainWindow::initDB() {
          "        strftime(NEW.expiry_date) != NEW.expiry_date "
          "             THEN RAISE(ABORT, \"Invalid date\") END; "
          "END;";
+    query->prepare(qu);
     if(!query->exec(qu)) {
         qDebug() << "Error when creating trigger in table \"medicines\"." << query->lastError();
     }
@@ -184,6 +184,7 @@ void MainWindow::initDB() {
                      "name STRING NOT NULL,"
                      "balance INTEGER CHECK (balance >= 0) DEFAULT (0)"
                      ");";
+    query->prepare(qu);
     if(!query->exec(qu)) {
         qDebug() << "Error when creating table \"reged_customers\".";
     }
@@ -199,10 +200,12 @@ void MainWindow::initDB() {
             "FOREIGN KEY(medicines) references medicines(id)"
             "ON DELETE NO ACTION ON UPDATE NO ACTION"
          ");";
+    query->prepare(qu);
     if(!query->exec(qu)) {
         qDebug() << "Error when creating table \"sales_history\".";
     }
     qu = "UPDATE SQLITE_SEQUENCE SET seq = 10000000 WHERE name = \"reged_customers\";";
+    query->prepare(qu);
     if(!query->exec(qu)) {
         qDebug() << "Error when setting autoincrement in table \"reged_customers\".";
     }
@@ -213,6 +216,7 @@ void MainWindow::initDB() {
          "    SELECT CASE WHEN strftime(NEW.date_of_buy) != NEW.date_of_buy "
          "        THEN RAISE(ABORT, \"Invalid date\") END; "
          "END; ";
+    query->prepare(qu);
     if(!query->exec(qu)) {
         qDebug() << "Error when creating trigger in table \"sales_history\"." << query->lastError();
     }

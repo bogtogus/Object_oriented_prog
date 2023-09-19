@@ -1,5 +1,38 @@
 #include "entities.h"
 
+
+SqlTableModel_Currency::SqlTableModel_Currency(QObject *parent, QSqlDatabase db, const int price_column) : QSqlTableModel(parent, db) {
+    this->price_column = price_column;
+}
+SqlTableModel_Currency::~SqlTableModel_Currency() { }
+
+void SqlTableModel_Currency::setCurrencyColumn(const int column) {
+    this->price_column = column;
+}
+
+QVariant SqlTableModel_Currency::data(const QModelIndex &index, int role) const {
+    if (role == Qt::DisplayRole){
+        if(price_column > 0 && index.column() == price_column) {
+            int value = QSqlTableModel::data(index, role).toInt();
+            return QVariant( QString("%1,%2").arg(QString::number(value / 100))
+                                             .arg(QString::number(value % 100), 2, QLatin1Char('0')));
+            /*QString value = QSqlTableModel::data(index, role).toString();
+            int length = value.length();
+            if (length > 2) {
+                return QVariant( QString("%1,%2").arg(QStringRef(&value, 0, length - 2))
+                                                 .arg(QStringRef(&value, length - 2, 2), 2, QLatin1Char('0')));
+            }
+            else {
+                return QVariant( QString("0,%1").arg(QStringRef(&value, length - 2, 2), 2, QLatin1Char('0')));
+            }
+            */
+        }
+    }
+    return QSqlTableModel::data(index, role);
+}
+
+
+
 /*!
  * \brief Конструктор сущности.
  * \param odb - разделяемый указатель на объект базы данных.
@@ -14,7 +47,7 @@ Entity::Entity(QSharedPointer<QSqlDatabase> odb) {
         }
         qDebug() << "open db";
     }
-    model = new QSqlTableModel(this, db->database());
+    model = new SqlTableModel_Currency(this, db->database());
     model->setEditStrategy(QSqlTableModel::OnManualSubmit);
 }
 
@@ -209,13 +242,13 @@ MedsEntity::MedsEntity(QSharedPointer<QSqlDatabase> odb,
         qDebug() << "Unable to open db.";
         return;
     }
+    model->setCurrencyColumn(7);
     model->setTable("medicines");
     model->select();
     this->field_names = fn;
     for (int i = 0; i < model->columnCount(); i++) {
         model->setHeaderData(i, Qt::Horizontal, field_names[i]);
     }
-    qDebug() << "Meds Rows: " << (model->rowCount());
 }
 
 MedsEntity::~MedsEntity() {
@@ -330,7 +363,6 @@ BonusEntity::BonusEntity(QSharedPointer<QSqlDatabase> odb,
     for (int i = 0; i < model->columnCount(); i++) {
         model->setHeaderData(i, Qt::Horizontal, field_names[i]);
     }
-    qDebug() << "Bonus Rows: " << (model->rowCount());
 }
 
 BonusEntity::~BonusEntity() {
@@ -374,6 +406,7 @@ SellEntity::SellEntity(QSharedPointer<QSqlDatabase> odb,
         qDebug() << "Unable to open db.";
         return;
     }
+    model->setCurrencyColumn(5);
     model->setTable("sales_history");
     model->select();
     this->field_names = fn;
@@ -382,7 +415,6 @@ SellEntity::SellEntity(QSharedPointer<QSqlDatabase> odb,
     }
     this->meds = me;
     this->bonuscards = be;
-    qDebug() << "Sales Rows: " << (model->rowCount());
 }
 
 SellEntity::~SellEntity() {

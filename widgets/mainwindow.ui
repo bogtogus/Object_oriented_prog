@@ -289,7 +289,7 @@
              <enum>QFrame::Box</enum>
             </property>
             <property name="text">
-             <string>name</string>
+             <string>Аптека «Фиалка»</string>
             </property>
            </widget>
           </item>
