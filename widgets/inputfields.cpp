@@ -738,6 +738,7 @@ SellAbstr::SellAbstr(const QMap<QString, QString>& titles,
     produceField3();
     produceField4();
     produceField5();
+    produceField6();
     finalization();
     connect(exec_button, &QPushButton::clicked, this, &SellAbstr::exec_clicked);
 }
@@ -796,6 +797,7 @@ void SellAbstr::produceField2() {
     for (; it != card_numbers.end(); it++) {
         customer->addItem(*it);
     }
+    connect(customer, QOverload<const QString&>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::card_changed);
     flay->addRow(label_2, customer);
     label_2 = nullptr;
 
@@ -863,6 +865,33 @@ void SellAbstr::produceField5() {
 }
 
 /*!
+ * \brief Построение поля с выручкой.
+ */
+void SellAbstr::produceField6() {
+    bonuswidget = new QWidget(this);
+    bonuswidget->setObjectName("bonuswidget");
+    bonuslay = new QHBoxLayout(bonuswidget);
+    bonuses_to_withdraw = new QLabel("", bonuswidget);
+    bonuses_to_withdraw->setObjectName("bonuses_to_withdraw");
+    bonuses_to_withdraw->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    bonuswidget->setObjectName("bonuses_to_withdraw");
+    bonuslay->addWidget(bonuses_to_withdraw);
+    withdraw_all_bonuses = new QCheckBox("Снять все бонусы");
+    withdraw_all_bonuses->setObjectName("withdraw_all_bonuses");
+    withdraw_all_bonuses->setTristate(false);
+    withdraw_all_bonuses->setStyleSheet("QCheckBox { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    bonuslay->addStretch();
+    bonuslay->addWidget(withdraw_all_bonuses);
+    connect(withdraw_all_bonuses, &QCheckBox::stateChanged, this, &SellAbstr::withdraw_all_state);
+
+    QSizePolicy sp_retain = bonuswidget->sizePolicy();
+    sp_retain.setRetainSizeWhenHidden(true);
+    bonuswidget->setSizePolicy(sp_retain);
+    flay->addWidget(bonuswidget);
+    bonuswidget->setVisible(false);
+}
+
+/*!
  * \brief Завершение построения интерфейса формы.
  * \details Поля ввода и кнопки действий помещаются в вертикальный компоновщик.
  */
@@ -898,6 +927,7 @@ void SellAbstr::med_changed(const QString& med_id) {
         pieces->setEnabled(false);
         return;
     }
+    bonuswidget->setVisible((bool)(customer->currentIndex() != 0 && medicines->currentIndex() != 0));
     pieces->setEnabled(true);
     int amount = 0;
     //int price = 0;
@@ -933,6 +963,33 @@ void SellAbstr::med_amount_changed(int value) {
     }
     if (earnings) earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
                                     .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
+}
+
+void SellAbstr::card_changed(const QString&) {
+    bonuswidget->setVisible((bool)(customer->currentIndex() != 0 && medicines->currentIndex() != 0));
+}
+
+void SellAbstr::withdraw_all_state(int state) {
+    if((bool)state && basic_price > 0 && medicines->currentIndex() > 0) {
+        int bonuses = 0;
+        if (entity->get_card_balance(customer->currentText().toInt(), bonuses)) {
+            bonuses_to_withdraw->setText("Бонусов к снятию: " + QString::number(bonuses));
+            bonuses *= 100;
+            int result = 0;
+            if (bonuses <= basic_price)
+                result = basic_price - bonuses;
+            earnings->setText(QString("%1,%2").arg(QString::number(result / 100))
+                                               .arg(QString::number(result % 100), 2, QLatin1Char('0')));
+        }
+        else {
+            bonuses_to_withdraw->setText("Бонусов на карте нет.");
+        }
+    }
+    else if (medicines->currentIndex() > 0) {
+        bonuses_to_withdraw->setText("");
+        earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
+                                           .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
+    }
 }
 
 /*!

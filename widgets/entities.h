@@ -71,7 +71,7 @@ public:
     QVector<QString> get_all_ids() const;
     // Получить количество лекарства с заданным id
     bool get_med_amount(const int id, int& amount) const;
-    int get_med_price(const int id, int& price) const;
+    bool get_med_price(const int id, int& price) const;
     // Обновить количество лекарства на складе
     bool update_record(const int id, const int amount);
 };
@@ -86,6 +86,7 @@ public:
                 const QVector<QString>&);
     ~BonusEntity();
     QVector<QString> get_all_cards() const;
+    bool get_card_balance(const int card_number, int& amount) const;
 };
 
 /*! Сущность История продаж
@@ -107,8 +108,9 @@ public:
     ~SellEntity();
     QVector<QString> get_all_cards() const;
     QVector<QString> get_all_ids() const;
-    bool get_med_amount(const int, int&) const;
-    int get_med_price(const int id, int& price) const;
+    bool get_med_amount(const int id, int& ampunt) const;
+    bool get_med_price(const int id, int& price) const;
+    bool get_card_balance(const int card_number, int& amount) const;
 };
 
 

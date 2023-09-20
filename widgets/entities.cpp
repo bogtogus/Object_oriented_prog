@@ -288,7 +288,7 @@ bool MedsEntity::get_med_amount(const int id, int& result) const {
  * \param price - возвращаемая цена лекарства.
  * \return успешность операции.
  */
-int MedsEntity::get_med_price(const int id, int &price) const {
+bool MedsEntity::get_med_price(const int id, int &price) const {
     QSqlQuery query(db->connectionName());
     query.prepare("SELECT price_for_one FROM medicines WHERE id = :id");
     query.bindValue(":id", id);
@@ -389,6 +389,27 @@ QVector<QString> BonusEntity::get_all_cards() const {
     return card_numbers;
 }
 
+bool BonusEntity::get_card_balance(const int card_number, int &balance) const {
+    QSqlQuery query(db->connectionName());
+    int count = 0;
+    bool succeed = false;
+    query.prepare("SELECT balance FROM reged_customers WHERE card_number = :card_number");
+    query.bindValue(":card_number", card_number);
+    if (query.exec()) {
+        qDebug() << query.executedQuery();
+        query.first();
+        count = query.value(0).toInt();
+        balance = count;
+        succeed = true;
+    }
+    else {
+        balance = -1;
+        succeed = false;
+    }
+    query.finish();
+    return succeed;
+}
+
 /*!
  * \brief Конструктор сущности продаж лекарств.
  * \param odb - разделяемый указатель на БД.
@@ -455,6 +476,10 @@ bool SellEntity::get_med_amount(const int id, int& amount) const {
  * \param amount - стоимость лекарства.
  * \return успешность операции.
  */
-int SellEntity::get_med_price(const int id, int &price) const {
+bool SellEntity::get_med_price(const int id, int &price) const {
     return meds->get_med_price(id, price);
+}
+
+bool SellEntity::get_card_balance(const int card_number, int &balance) const {
+    return bonuscards->get_card_balance(card_number, balance);
 }

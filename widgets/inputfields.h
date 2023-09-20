@@ -131,6 +131,11 @@ private:
     QComboBox* medicines;
     QSpinBox* pieces;
     QLineEdit* earnings = nullptr;
+
+    QWidget* bonuswidget;
+    QCheckBox* withdraw_all_bonuses;
+    QLabel* bonuses_to_withdraw;
+    QHBoxLayout* bonuslay;
     QHBoxLayout* hlay;
     const SellEntity* entity;
     int basic_price;
@@ -143,9 +148,12 @@ private:
     void produceField3();
     void produceField4();
     void produceField5();
+    void produceField6();
     void finalization();
-    void med_changed(const QString&);
-    void med_amount_changed(int);
+    void med_changed(const QString& med_id);
+    void med_amount_changed(int amount);
+    void card_changed(const QString& card_id);
+    void withdraw_all_state(int state);
     void fill_fields(const QSqlRecord&, const int) override;
     void earnings_edit_enabled(const bool enabled);
 

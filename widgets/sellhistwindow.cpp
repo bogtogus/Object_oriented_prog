@@ -27,6 +27,7 @@ SellHistWindow::SellHistWindow(QWidget *parent,
     BEntity = be;
     SEntity = se;
     InFAbs = nullptr;
+    record_being_edited = nullptr;
     first_add = -1;
     ui->setupUi(this);
     ui->verticalLayout->setSpacing(1);
@@ -226,6 +227,7 @@ void SellHistWindow::clicked_on_edit() {
             this,
             &SellHistWindow::edit_record_db);
     impl.reset();
+    record_being_edited = &record;
     emit summoned_child(InFAbs);
 }
 
@@ -235,10 +237,38 @@ void SellHistWindow::clicked_on_edit() {
  * \param row - строка в модели таблицы, где находится старая запись.
  */
 void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
+    int old_med_id = record_being_edited->value(keys[3]).toInt();
+    int med_id = record.value(keys[3]).toInt();
+    int sell_count = record.value(keys[4]).toInt();
+    if (temp_sales.contains(med_id) &&
+            temp_sales[med_id] < sell_count) {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Ошибка добавления записи в таблицу! "
+                             "На складе нет достаточного количества лекарства (id " +
+                             QString::number(med_id) + ")! Запрошено " +
+                             QString::number(sell_count) + "шт. , в наличии " +
+                             QString::number(temp_sales[med_id]) + "шт.");
+        return;
+    }
     if (SEntity->setRecord(row, record)) {
         QMessageBox::information(this, "Успех!",
                              "Введённая запись отредактирована. "
                              "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+        if (old_med_id != med_id && temp_sales.contains(old_med_id)) {
+            temp_sales.remove(old_med_id);
+        }
+        if (!temp_sales.contains(med_id)) {
+            int db_med_count = 0;
+            if (!MEntity->get_med_amount(med_id, db_med_count)) {
+                qDebug() << MEntity->lastError();
+                return;
+            }
+            temp_sales.insert(med_id, db_med_count);
+        }
+        temp_sales[med_id] -= sell_count;
+        qDebug() << temp_sales;
+        delete record_being_edited;
+        record_being_edited = nullptr;
     }
     else {
         QMessageBox::warning(this, "Ошибка!",

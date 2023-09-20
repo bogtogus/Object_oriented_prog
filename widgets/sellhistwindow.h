@@ -40,6 +40,7 @@ private:
     // лекарств на складе (id:new_amount)
     // которое потом будет вноситься в реальную таблицу
     QMap<int, int> temp_sales;
+    QSqlRecord* record_being_edited;
 
     void add_record_db(const QSqlRecord*);
     void find_record_db(const QString&);
