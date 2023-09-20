@@ -252,33 +252,41 @@ MedsEntity::MedsEntity(QSharedPointer<QSqlDatabase> odb,
 }
 
 MedsEntity::~MedsEntity() {
-
+    temp_amount.clear();
 }
 
 /*!
  * \brief Получение количества лекарства с заданным id.
  * \param id - id лекарства.
  * \param result - количество лекарства.
- * \return
+ * \return количество лекартва на складе.
+ * \details При наличии в кэше лекартсва с заданным id возарщает значение из кэша.
  */
-bool MedsEntity::get_med_amount(const int id, int& result) const {
-    QSqlQuery query(db->connectionName());
-    int count = 0;
+bool MedsEntity::get_med_amount(const int med_id, int& result) const {
     bool succeed = false;
-    query.prepare("SELECT pieces FROM medicines WHERE id = :id");
-    query.bindValue(":id", id);
-    if (query.exec()) {
-        qDebug() << query.executedQuery();
-        query.first();
-        count = query.value(0).toInt();
-        result = count;
+    if (temp_amount.contains(med_id)) {
+        result = temp_amount[med_id];
         succeed = true;
     }
     else {
-        result = -1;
-        succeed = false;
-    }
-    query.finish();
+        QSqlQuery query(db->connectionName());
+        int count = 0;
+
+        query.prepare("SELECT pieces FROM medicines WHERE id = :id");
+        query.bindValue(":id", med_id);
+        if (query.exec()) {
+            qDebug() << query.executedQuery();
+            query.first();
+            count = query.value(0).toInt();
+            result = count;
+            succeed = true;
+        }
+        else {
+            result = -1;
+            succeed = false;
+        }
+        query.finish();
+        }
     return succeed;
 }
 
@@ -288,12 +296,12 @@ bool MedsEntity::get_med_amount(const int id, int& result) const {
  * \param price - возвращаемая цена лекарства.
  * \return успешность операции.
  */
-bool MedsEntity::get_med_price(const int id, int &price) const {
+bool MedsEntity::get_med_price(const int med_id, int &price) const {
     QSqlQuery query(db->connectionName());
     query.prepare("SELECT price_for_one FROM medicines WHERE id = :id");
-    query.bindValue(":id", id);
+    query.bindValue(":id", med_id);
     if (query.exec()) {
-        qDebug() << query.executedQuery() << " " << id;
+        qDebug() << query.executedQuery() << " " << med_id;
         query.first();
         int temp = query.value(0).toInt();
         query.finish();
@@ -308,17 +316,101 @@ bool MedsEntity::get_med_price(const int id, int &price) const {
 }
 
 /*!
+ * \brief Получение количества лекарств из кэша.
+ * \param med_id - id лекарства.
+ * \return количество лекарств из кэша.
+ */
+int MedsEntity::get_med_amount(const int med_id) const {
+    return temp_amount.value(med_id, -1);
+}
+
+/*!
+ * \brief Проверка, достаточно ли лекарства, количество которого хранится в кэше.
+ * \param med_id - id лекарства.
+ * \param amount - запрашиваемое количество лекартсва.
+ * \return достаточно/недостаточно.
+ */
+bool MedsEntity::is_enough_meds(const int med_id, const int amount) const {
+    if (med_id < 1) return false;
+    return (bool)(temp_amount.value(med_id, -1) >= amount);
+}
+
+/*!
+ * \brief Содержится ли в кэше лекарство с заданным id.
+ * \param med_id - id лекарства.
+ * \return содержится/ не содержится.
+ */
+bool MedsEntity::cache_contains(const int med_id) const {
+    return temp_amount.contains(med_id);
+}
+
+/*!
+ * \brief Добавление в кэш нового значения количества лекарства после продажи.
+ * \param med_id - id лекарства.
+ * \param sold - количество проданного лекарства.
+ * \return успешность операции.
+ */
+bool MedsEntity::add_temp_sale(const int med_id, const int sold) {
+    if (med_id < 1) return false;
+    if (!temp_amount.contains(med_id)) {
+        int db_med_count = 0;
+        if (!get_med_amount(med_id, db_med_count)) {
+            qDebug() << model->lastError();
+            return false;
+        }
+        if (db_med_count < 0) return false;
+        temp_amount.insert(med_id, db_med_count);
+    }
+    if (temp_amount[med_id] < sold) return false;
+
+    temp_amount[med_id] -= sold;
+    qDebug() << temp_amount;
+    return true;
+}
+
+/*!
+ * \brief Удаление из кэша информации об оставшемся количестве лекартсва на складе.
+ * \param med_id - id лекарства.
+ * \return успешность операции.
+ */
+bool MedsEntity::remove_temp_sale(const int med_id) {
+    if (med_id < 1) return false;
+    return (bool)temp_amount.remove(med_id);
+}
+
+/*!
+ * \brief Очистка кэша от временных значений количества лекарств на складе.
+ */
+void MedsEntity::clear_cache() {
+    temp_amount.clear();
+}
+
+/*!
+ * \brief Обновить информацию в БД согласно информации в кэше.
+ */
+void MedsEntity::apply_cache_info() {
+    QMap<int, int> ::iterator it = temp_amount.begin();
+    for (; it != temp_amount.end(); it++) {
+        qDebug() << *it;
+        if (!update_amount(it.key(), it.value())) {
+            qDebug() << model->lastError();
+        }
+    }
+}
+
+
+/*!
  * \brief Обновление количества лекарства на складе.
  * \param id - id лекарства.
  * \param pieces - новое значение количества лекарства.
  * \return успешность операции.
  */
-bool MedsEntity::update_record(const int id, const int pieces) {
-    if (pieces < 0) return false;
+bool MedsEntity::update_amount(const int med_id, const int pieces) {
+    if (med_id < 1 || pieces < 0) return false;
     QSqlQuery query(db->connectionName());
     query.prepare("UPDATE medicines SET pieces = :pieces WHERE id = :id");
     query.bindValue(":pieces", pieces);
-    query.bindValue(":id", id);
+    query.bindValue(":id", med_id);
     bool ret = query.exec();
     query.finish();
     return ret;
@@ -390,24 +482,92 @@ QVector<QString> BonusEntity::get_all_cards() const {
 }
 
 bool BonusEntity::get_card_balance(const int card_number, int &balance) const {
-    QSqlQuery query(db->connectionName());
-    int count = 0;
     bool succeed = false;
-    query.prepare("SELECT balance FROM reged_customers WHERE card_number = :card_number");
-    query.bindValue(":card_number", card_number);
-    if (query.exec()) {
-        qDebug() << query.executedQuery();
-        query.first();
-        count = query.value(0).toInt();
-        balance = count;
+    if (temp_balance.contains(card_number)) {
+        balance = temp_balance[card_number];
         succeed = true;
     }
     else {
-        balance = -1;
-        succeed = false;
+        QSqlQuery query(db->connectionName());
+        int count = 0;
+        query.prepare("SELECT balance FROM reged_customers WHERE card_number = :card_number");
+        query.bindValue(":card_number", card_number);
+        if (query.exec()) {
+            qDebug() << query.executedQuery();
+            query.first();
+            count = query.value(0).toInt();
+            balance = count;
+            succeed = true;
+        }
+        else {
+            balance = -1;
+            succeed = false;
+        }
+        query.finish();
     }
-    query.finish();
     return succeed;
+}
+
+int BonusEntity::get_card_balance(const int card_number) const {
+    return temp_balance.value(card_number, -1);
+}
+
+bool BonusEntity::is_enough_bonuses(const int card_number, const int amount) const {
+    if (card_number < 10000000) return false;
+    return (bool)(temp_balance.value(card_number, -1) >= amount);
+}
+
+bool BonusEntity::cache_contains(const int card_number) const {
+    if (card_number < 10000000) return false;
+    return temp_balance.contains(card_number);
+}
+
+bool BonusEntity::add_temp_withdraw(const int card_number, const int withdrown) {
+    if (card_number < 10000000) return false;
+    if (!temp_balance.contains(card_number)) {
+        int db_med_count = 0;
+        if (!get_card_balance(card_number, db_med_count)) {
+            qDebug() << model->lastError();
+            return false;
+        }
+        if (db_med_count < 0) return false;
+        temp_balance.insert(card_number, db_med_count);
+    }
+    if (temp_balance[card_number] < withdrown) return false;
+
+    temp_balance[card_number] -= withdrown;
+    qDebug() << temp_balance;
+    return true;
+}
+
+bool BonusEntity::remove_temp_withdraw(const int card_number) {
+    if (card_number < 10000000) return false;
+    return (bool)(temp_balance.remove(card_number));
+}
+
+void BonusEntity::clear_cache() {
+    temp_balance.clear();
+}
+
+void BonusEntity::apply_cache_info() {
+    QMap<int, int> ::iterator it = temp_balance.begin();
+    for (; it != temp_balance.end(); it++) {
+        qDebug() << *it;
+        if (!update_balance(it.key(), it.value())) {
+            qDebug() << model->lastError();
+        }
+    }
+}
+
+bool BonusEntity::update_balance(const int card_number, const int balance) {
+    if (card_number < 10000000) return false;
+    QSqlQuery query(db->connectionName());
+    query.prepare("UPDATE reged_customers SET balance = :balance WHERE card_number = :card_number");
+    query.bindValue(":balance", balance);
+    query.bindValue(":card_number", card_number);
+    bool ret = query.exec();
+    query.finish();
+    return ret;
 }
 
 /*!

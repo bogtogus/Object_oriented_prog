@@ -134,12 +134,13 @@ private:
 
     QWidget* bonuswidget;
     QCheckBox* withdraw_all_bonuses;
-    QLabel* bonuses_to_withdraw;
+    QLineEdit* bonuses_to_withdraw;
     QHBoxLayout* bonuslay;
     QHBoxLayout* hlay;
     const SellEntity* entity;
     int basic_price;
     int current_unit_price;
+    bool edit_mode;
 
     int row;
     void exec_clicked() override;
@@ -154,8 +155,10 @@ private:
     void med_amount_changed(int amount);
     void card_changed(const QString& card_id);
     void withdraw_all_state(int state);
+    void bonus_withdraw_edited(const QString&);
     void fill_fields(const QSqlRecord&, const int) override;
-    void earnings_edit_enabled(const bool enabled);
+    void record_edit_enabled(const bool enabled);
+    void recalc_earnings();
 
     friend class AddSellImplement;
     friend class FindSellImplement;

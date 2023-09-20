@@ -36,10 +36,7 @@ private:
     SellEntity* SEntity;
     // первый добавленный индекс в таблице
     int first_add;
-    // временное хранилище новых значений количества
-    // лекарств на складе (id:new_amount)
-    // которое потом будет вноситься в реальную таблицу
-    QMap<int, int> temp_sales;
+    // айди лекарства, которое было подвергнуто изменению
     QSqlRecord* record_being_edited;
 
     void add_record_db(const QSqlRecord*);

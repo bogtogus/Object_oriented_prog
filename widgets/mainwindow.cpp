@@ -195,6 +195,7 @@ void MainWindow::initDB() {
             "medicines TEXT NOT NULL,"
             "pieces INTEGER CHECK (pieces > 0) NOT NULL,"
             "earnings BIGINT DEFAULT (0) NOT NULL,"
+            "bonuses_withdrown INT,"
             "FOREIGN KEY(customer) references reged_customers(card_number) "
             "   ON DELETE NO ACTION,"
             "FOREIGN KEY(medicines) references medicines(id)"
@@ -233,7 +234,7 @@ void MainWindow::initDB() {
     QVector<QString> Bfn = {"Номер карты", "ФИО", "Кол-во баллов"};
     QVector<QString> Sfn = {"ID", "Дата покупки", "Бонусная карта",
                             "ID лекарства",
-                            "Количество", "Выручка"};
+                            "Количество", "Выручка", "Бонусов списано"};
     // Создание объектов, работающих с конкретными таблицами БД
     MEntity = new MedsEntity(db, Mfn);
     BEntity = new BonusEntity(db, Bfn);

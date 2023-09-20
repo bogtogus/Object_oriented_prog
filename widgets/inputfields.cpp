@@ -4,6 +4,9 @@
 #include <QDebug>
 #include <QMessageBox>
 
+#define LABEL_STYLE "QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }"
+
+
 inputFields::inputFields(QWidget *parent,
                          const QMap<QString, QString>& titles,
                          const QMap<QString, QString>& fields,
@@ -110,7 +113,7 @@ void MedsAbstr::exec_clicked() {
 void MedsAbstr::produceField1() {
     QLabel* label_1 = new QLabel(fields[keys[1]], this);
     label_1->setObjectName("label_1");
-    label_1->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_1->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_1);
     manufactorer = new QLineEdit("", this);
     manufactorer->setObjectName(keys[1]);
@@ -126,7 +129,7 @@ void MedsAbstr::produceField1() {
 void MedsAbstr::produceField2() {
     QLabel* label_2 = new QLabel(fields[keys[2]], this);
     label_2->setObjectName("label_2");
-    label_2->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_2->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_2);
     name = new QLineEdit("", this);
     name->setObjectName(keys[2]);
@@ -143,7 +146,7 @@ void MedsAbstr::produceField2() {
 void MedsAbstr::produceField3() {
     QLabel* label_3 = new QLabel(fields[keys[3]], this);
     label_3->setObjectName("label_3");
-    label_3->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_3->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_3);
     date_of_manuf = new QLineEdit("", this);
     date_of_manuf->setObjectName(keys[3]);
@@ -162,7 +165,7 @@ void MedsAbstr::produceField3() {
 void MedsAbstr::produceField4() {
     QLabel* label_4 = new QLabel(fields[keys[4]], this);
     label_4->setObjectName("label_4");
-    label_4->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_4->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_4);
     expiry_date = new QLineEdit("", this);
     expiry_date->setObjectName(keys[4]);
@@ -197,7 +200,7 @@ void MedsAbstr::produceField5() {
 void MedsAbstr::produceField6() {
     QLabel* label_6 = new QLabel(fields[keys[6]], this);
     label_6->setObjectName("label_6");
-    label_6->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_6->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_6);
     pieces = new QLineEdit("", this);
     pieces->setObjectName(keys[6]);
@@ -216,7 +219,7 @@ void MedsAbstr::produceField6() {
 void MedsAbstr::produceField7() {
     QLabel* label_7 = new QLabel(fields[keys[7]], this);
     label_7->setObjectName("label_7");
-    label_7->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_7->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_7);
     price = new QLineEdit("", this);
     price->setObjectName(keys[7]);
@@ -510,7 +513,7 @@ void BonusAbstr::exec_clicked() {
 void BonusAbstr::produceField1() {
     QLabel* label_1 = new QLabel(fields[keys[0]], this);
     label_1->setObjectName("label_1");
-    label_1->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_1->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_1);
     card_number = new QLineEdit("", this);
     card_number->setObjectName(keys[0]);
@@ -529,7 +532,7 @@ void BonusAbstr::produceField1() {
 void BonusAbstr::produceField2() {
     QLabel* label_2 = new QLabel(fields[keys[1]], this);
     label_2->setObjectName("label_2");
-    label_2->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_2->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_2);
     name = new QLineEdit("", this);
     name->setObjectName(keys[1]);
@@ -546,7 +549,7 @@ void BonusAbstr::produceField2() {
 void BonusAbstr::produceField3() {
     QLabel* label_3 = new QLabel(fields[keys[2]], this);
     label_3->setObjectName("label_3");
-    label_3->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_3->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_3);
     bonus_amount = new QLineEdit("", this);
     bonus_amount->setObjectName(keys[2]);
@@ -730,6 +733,7 @@ SellAbstr::SellAbstr(const QMap<QString, QString>& titles,
                        QWidget* parent) : inputFields(parent, titles, fields, keys) {
     this->impl = impl;
     this->entity = en;
+    edit_mode = false;
     //qDebug() << card_numbers;
     //qDebug() << medicines_ids;
     buildLayout();
@@ -768,7 +772,7 @@ void SellAbstr::exec_clicked() {
 void SellAbstr::produceField1() {
     QLabel* label_1 = new QLabel(fields[keys[1]], this);
     label_1->setObjectName("label_1");
-    label_1->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_1->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_1);
     date_of_buy = new QCalendarWidget(this);
     date_of_buy->setObjectName(keys[1]);
@@ -783,7 +787,7 @@ void SellAbstr::produceField1() {
 void SellAbstr::produceField2() {
     QLabel* label_2 = new QLabel(fields[keys[2]], this);
     label_2->setObjectName("label_2");
-    label_2->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_2->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_2);
     customer = new QComboBox(this);
     customer->setObjectName(keys[2]);
@@ -809,7 +813,7 @@ void SellAbstr::produceField2() {
 void SellAbstr::produceField3() {
     QLabel* label_3 = new QLabel(fields[keys[3]], this);
     label_3->setObjectName("label_3");
-    label_3->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_3->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_3);
     medicines = new QComboBox(this);
     medicines->setObjectName(keys[3]);
@@ -832,7 +836,7 @@ void SellAbstr::produceField3() {
 void SellAbstr::produceField4() {
     QLabel* label_4 = new QLabel(fields[keys[4]], this);
     label_4->setObjectName("label_4");
-    label_4->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_4->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_3);
     pieces = new QSpinBox(this);
     pieces->setObjectName(keys[4]);
@@ -851,12 +855,12 @@ void SellAbstr::produceField4() {
 void SellAbstr::produceField5() {
     QLabel* label_5 = new QLabel(fields[keys[5]], this);
     label_5->setObjectName("label_5");
-    label_5->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    label_5->setStyleSheet(LABEL_STYLE);
     earnings = new QLineEdit("", this);
     earnings->setObjectName(keys[5]);
     earnings->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
     earnings->setMinimumHeight(30);
-    earnings->setEnabled(false);
+    earnings->setReadOnly(true);
     QRegularExpression regexp("[+]?\\d{1,20}([.,]\\d{1,2})?");
     QValidator* valid = new QRegularExpressionValidator(regexp, this);
     earnings->setValidator(valid);
@@ -871,10 +875,23 @@ void SellAbstr::produceField6() {
     bonuswidget = new QWidget(this);
     bonuswidget->setObjectName("bonuswidget");
     bonuslay = new QHBoxLayout(bonuswidget);
-    bonuses_to_withdraw = new QLabel("", bonuswidget);
+    QLabel* bonuses_withdraw_text = new QLabel("Бонусов к списанию: ", bonuswidget);
+    bonuses_withdraw_text->setObjectName("bonuses_withdraw_text");
+    bonuses_withdraw_text->setStyleSheet(LABEL_STYLE);
+    bonuslay->addWidget(bonuses_withdraw_text);
+
+    bonuses_to_withdraw = new QLineEdit("0", bonuswidget);
     bonuses_to_withdraw->setObjectName("bonuses_to_withdraw");
-    bonuses_to_withdraw->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
+    bonuses_to_withdraw->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
+    bonuses_to_withdraw->setMinimumWidth(30);
+    bonuses_to_withdraw->setMaximumWidth(200);
+    bonuses_to_withdraw->setMinimumHeight(30);
+    QRegularExpression regexp("\\d{1,20}");
+    QValidator* valid = new QRegularExpressionValidator(regexp, this);
+    bonuses_to_withdraw->setValidator(valid);
+    bonuses_to_withdraw->setReadOnly(true);
     bonuswidget->setObjectName("bonuses_to_withdraw");
+    connect(bonuses_to_withdraw, &QLineEdit::textEdited, this, &SellAbstr::bonus_withdraw_edited);
     bonuslay->addWidget(bonuses_to_withdraw);
     withdraw_all_bonuses = new QCheckBox("Снять все бонусы");
     withdraw_all_bonuses->setObjectName("withdraw_all_bonuses");
@@ -925,9 +942,12 @@ void SellAbstr::finalization() {
 void SellAbstr::med_changed(const QString& med_id) {
     if (medicines->currentIndex() == 0) {
         pieces->setEnabled(false);
+        if (earnings) earnings->setText("");
+        bonuswidget->setVisible(false);
+        bonuses_to_withdraw->setReadOnly(true);
         return;
     }
-    bonuswidget->setVisible((bool)(customer->currentIndex() != 0 && medicines->currentIndex() != 0));
+    bonuswidget->setVisible((bool)(customer->currentIndex() != 0));
     pieces->setEnabled(true);
     int amount = 0;
     //int price = 0;
@@ -946,8 +966,7 @@ void SellAbstr::med_changed(const QString& med_id) {
             current_unit_price = -1;
         }
     }
-    if (earnings) earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
-                                    .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
+    recalc_earnings();
 }
 
 /*!
@@ -961,34 +980,62 @@ void SellAbstr::med_amount_changed(int value) {
     else {
         basic_price = -1;
     }
-    if (earnings) earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
-                                    .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
+    recalc_earnings();
 }
 
 void SellAbstr::card_changed(const QString&) {
     bonuswidget->setVisible((bool)(customer->currentIndex() != 0 && medicines->currentIndex() != 0));
+    if (customer->currentIndex() != 0) recalc_earnings();
 }
 
-void SellAbstr::withdraw_all_state(int state) {
-    if((bool)state && basic_price > 0 && medicines->currentIndex() > 0) {
-        int bonuses = 0;
-        if (entity->get_card_balance(customer->currentText().toInt(), bonuses)) {
-            bonuses_to_withdraw->setText("Бонусов к снятию: " + QString::number(bonuses));
-            bonuses *= 100;
-            int result = 0;
-            if (bonuses <= basic_price)
-                result = basic_price - bonuses;
-            earnings->setText(QString("%1,%2").arg(QString::number(result / 100))
-                                               .arg(QString::number(result % 100), 2, QLatin1Char('0')));
+void SellAbstr::withdraw_all_state(int) {
+    recalc_earnings();
+}
+
+void SellAbstr::bonus_withdraw_edited(const QString &) {
+    if (!edit_mode) recalc_earnings();
+    else bonuses_to_withdraw->setReadOnly(false);
+}
+
+/*!
+ * \brief Пересчёт выручки.
+ * \details Вызывается при изменении купленного лекарства, количества лекартсва, бонусной карты
+ * или выбора списать баллы с карты.
+ */
+void SellAbstr::recalc_earnings() {
+    if (medicines->currentIndex() > 0) {
+        if (withdraw_all_bonuses->isVisible() && withdraw_all_bonuses->checkState() == Qt::Checked) {
+            int bonuses = 0;
+            if (entity->get_card_balance(customer->currentText().toInt(), bonuses)) {
+                //bonuses_to_withdraw->setEnabled(true);
+                int result = 0;
+                int bonuses_kop = bonuses * 100;
+                if (bonuses_kop <= basic_price) {
+                    bonuses_to_withdraw->setText(QString::number(bonuses));
+                    result = basic_price - bonuses_kop;
+                }
+                else {
+                    bonuses_to_withdraw->setText(QString::number(basic_price / 100));
+                }
+                earnings->setText(QString("%1,%2").arg(QString::number(result / 100))
+                                                   .arg(QString::number(result % 100), 2, QLatin1Char('0')));
+            }
+            else {
+                bonuses_to_withdraw->setReadOnly(true);
+                bonuses_to_withdraw->setText("Бонусов на карте нет.");
+            }
+        }
+        else if (withdraw_all_bonuses->isVisible()) {
+            //bonuses_to_withdraw->setEnabled(true);
+            bonuses_to_withdraw->setText("0");
+            earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
+                                               .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
         }
         else {
-            bonuses_to_withdraw->setText("Бонусов на карте нет.");
+            bonuses_to_withdraw->setText("0");
+            earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
+                                               .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
         }
-    }
-    else if (medicines->currentIndex() > 0) {
-        bonuses_to_withdraw->setText("");
-        earnings->setText(QString("%1,%2").arg(QString::number(basic_price / 100))
-                                           .arg(QString::number(basic_price % 100), 2, QLatin1Char('0')));
     }
 }
 
@@ -1019,16 +1066,23 @@ void SellAbstr::fill_fields(const QSqlRecord & record, const int row) {
         val.push_front("0,");
     }
     earnings->setText(val);
+    QString bonuses = record.field(keys[6]).value().toString();
+    if (!bonuses.isEmpty()) {
+        withdraw_all_bonuses->setChecked(true);
+    }
+    bonuses_to_withdraw->setText(bonuses);
     this->row = row;
-    earnings_edit_enabled(true);
+    record_edit_enabled(true);
 }
 
 /*!
  * \brief Включение или отключение возможности редактирования выручки.
  * \param enabled - режим (вкл/выкл).
  */
-void SellAbstr::earnings_edit_enabled(const bool enabled) {
-    earnings->setEnabled(enabled);
+void SellAbstr::record_edit_enabled(const bool enabled) {
+    edit_mode = true;
+    earnings->setReadOnly(!enabled);
+    bonuses_to_withdraw->setReadOnly(!enabled);
 }
 
 /*!
@@ -1066,6 +1120,12 @@ QString AddSellImplement::processFields(inputFields* abs) {
                              concreteAbs->fields[concreteAbs->earnings->objectName()] +
                              "\"!";
     }
+    else if (concreteAbs->bonuses_to_withdraw->text().isEmpty() ||
+             !concreteAbs->bonuses_to_withdraw->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->bonuses_to_withdraw->objectName()] +
+                             "\"!";
+    }
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
@@ -1089,6 +1149,8 @@ QString AddSellImplement::processFields(inputFields* abs) {
             val = earnings_str.toInt() * 100;
         }
         rec->setValue(concreteAbs->keys[5], val);
+        rec->append(QSqlField(concreteAbs->keys[6]));
+        rec->setValue(concreteAbs->keys[6], concreteAbs->bonuses_to_withdraw->text());
         emit Implement::exec_clicked_signal(rec);
         delete rec;
     }
@@ -1118,6 +1180,11 @@ QString FindSellImplement::processFields(inputFields * abs) {
                 "\" AND ";
     }
     if (!concreteAbs->medicines->currentText().isEmpty()) {
+        where += concreteAbs->medicines->objectName() +
+                " = \"" + concreteAbs->medicines->currentText() +
+                "\" AND ";
+    }
+    if (!concreteAbs->earnings->text().isEmpty() && concreteAbs->earnings->hasAcceptableInput()) {
         where += concreteAbs->medicines->objectName() +
                 " = \"" + concreteAbs->medicines->currentText() +
                 "\" AND ";
@@ -1167,6 +1234,12 @@ QString EditSellImplement::processFields(inputFields * abs) {
                              concreteAbs->fields[concreteAbs->earnings->objectName()] +
                              "\"!";
     }
+    else if (concreteAbs->bonuses_to_withdraw->text().isEmpty() ||
+             !concreteAbs->bonuses_to_withdraw->hasAcceptableInput()) {
+        return "Ошибка ввода в поле \"" +
+                             concreteAbs->fields[concreteAbs->bonuses_to_withdraw->objectName()] +
+                             "\"!";
+    }
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
@@ -1187,6 +1260,8 @@ QString EditSellImplement::processFields(inputFields * abs) {
             val = earnings_str.toInt() * 100;
         }
         rec->setValue(concreteAbs->keys[5], val);
+        rec->append(QSqlField(concreteAbs->keys[6]));
+        rec->setValue(concreteAbs->keys[6], concreteAbs->bonuses_to_withdraw->text());
         emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
         delete rec;
     }

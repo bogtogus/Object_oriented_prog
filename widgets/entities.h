@@ -63,6 +63,8 @@ public:
  */
 class MedsEntity : public Entity {
     Q_OBJECT
+private:
+    QMap<int, int> temp_amount;
 public:
     MedsEntity(QSharedPointer<QSqlDatabase> odb,
                 const QVector<QString>&);
@@ -70,10 +72,17 @@ public:
     // Все айди лекарств
     QVector<QString> get_all_ids() const;
     // Получить количество лекарства с заданным id
-    bool get_med_amount(const int id, int& amount) const;
-    bool get_med_price(const int id, int& price) const;
-    // Обновить количество лекарства на складе
-    bool update_record(const int id, const int amount);
+    bool get_med_amount(const int med_id, int& amount) const;
+    bool get_med_price(const int med_id, int& price) const;
+    int get_med_amount(const int med_id) const;
+    bool is_enough_meds(const int med_id, const int amount) const;
+    bool cache_contains(const int med_id) const;
+
+    bool add_temp_sale(const int med_id, const int sold);
+    bool remove_temp_sale(const int med_id);
+    void clear_cache();
+    void apply_cache_info();
+    bool update_amount(const int med_id, const int amount);
 };
 
 /*!
@@ -81,12 +90,23 @@ public:
  */
 class BonusEntity : public Entity {
     Q_OBJECT
+private:
+    QMap<int, int> temp_balance;
 public:
     BonusEntity(QSharedPointer<QSqlDatabase> odb,
                 const QVector<QString>&);
     ~BonusEntity();
     QVector<QString> get_all_cards() const;
     bool get_card_balance(const int card_number, int& amount) const;
+    int get_card_balance(const int card_number) const;
+    bool is_enough_bonuses(const int card_number, const int amount) const;
+    bool cache_contains(const int card_number) const;
+
+    bool add_temp_withdraw(const int card_number, const int withdrown);
+    bool remove_temp_withdraw(const int card_number);
+    void clear_cache();
+    void apply_cache_info();
+    bool update_balance(const int card_number, const int balance);
 };
 
 /*! Сущность История продаж
