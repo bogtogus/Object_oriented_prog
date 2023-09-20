@@ -77,6 +77,7 @@ void SellHistWindow::resizeEvent(QResizeEvent *event) {
  * передача ему модели таблицы, а также настройка нескольких параметров представления.
  */
 void SellHistWindow::init_table() {
+    SEntity->select();
     QHeaderView* header = ui->table->horizontalHeader();
     header->setSectionResizeMode(QHeaderView::Interactive);
     header->setDefaultAlignment(Qt::AlignCenter | (Qt::Alignment)Qt::TextWordWrap);

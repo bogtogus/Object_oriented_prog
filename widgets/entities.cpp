@@ -221,7 +221,7 @@ bool Entity::submitAll() {
 }
 
 /*!
- * \brief Выбор всех записей тиаблицы.
+ * \brief Выбор всех записей таблицы.
  * \return успешность операции.
  */
 bool Entity::select() {
@@ -244,7 +244,7 @@ MedsEntity::MedsEntity(QSharedPointer<QSqlDatabase> odb,
     }
     model->setCurrencyColumn(7);
     model->setTable("medicines");
-    model->select();
+    //model->select();
     this->field_names = fn;
     for (int i = 0; i < model->columnCount(); i++) {
         model->setHeaderData(i, Qt::Horizontal, field_names[i]);
@@ -450,7 +450,7 @@ BonusEntity::BonusEntity(QSharedPointer<QSqlDatabase> odb,
         return;
     }
     model->setTable("reged_customers");
-    model->select();
+    //model->select();
     this->field_names = fn;
     for (int i = 0; i < model->columnCount(); i++) {
         model->setHeaderData(i, Qt::Horizontal, field_names[i]);
@@ -589,7 +589,7 @@ SellEntity::SellEntity(QSharedPointer<QSqlDatabase> odb,
     }
     model->setCurrencyColumn(5);
     model->setTable("sales_history");
-    model->select();
+    //model->select();
     this->field_names = fn;
     for (int i = 0; i < model->columnCount(); i++) {
         model->setHeaderData(i, Qt::Horizontal, field_names[i]);

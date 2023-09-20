@@ -101,6 +101,7 @@ void BonusProgWindow::closeEvent(QCloseEvent *event) {
  * передача ему модели таблицы, а также настройка нескольких параметров представления.
  */
 void BonusProgWindow::init_table() {
+    entity->select();
     ui->table->setModel(entity->get_model());
     QHeaderView* header = ui->table->horizontalHeader();
     header->setSectionResizeMode(QHeaderView::Interactive);
