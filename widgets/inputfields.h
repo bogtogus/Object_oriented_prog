@@ -15,6 +15,7 @@
 #include <QPushButton>
 #include <QtSql>
 #include <QSpinBox>
+#include <QCalendarWidget>
 
 namespace Ui {
 class inputFields;
@@ -125,7 +126,7 @@ class SellAbstr : public inputFields {
     Q_OBJECT
 private:
     // Элементы формы
-    QLineEdit* date_of_buy;
+    QCalendarWidget* date_of_buy;
     QComboBox* customer;
     QComboBox* medicines;
     QSpinBox* pieces;
@@ -146,6 +147,7 @@ private:
     void med_changed(const QString&);
     void med_amount_changed(int);
     void fill_fields(const QSqlRecord&, const int) override;
+    void earnings_edit_enabled(const bool enabled);
 
     friend class AddSellImplement;
     friend class FindSellImplement;

@@ -769,13 +769,10 @@ void SellAbstr::produceField1() {
     label_1->setObjectName("label_1");
     label_1->setStyleSheet("QLabel { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
     //labels.push_back(label_1);
-    date_of_buy = new QLineEdit("", this);
+    date_of_buy = new QCalendarWidget(this);
     date_of_buy->setObjectName(keys[1]);
     date_of_buy->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
-    QRegularExpression regexp("\\d\\d-\\d\\d-\\d{4}");
-    QValidator* valid = new QRegularExpressionValidator(regexp, this);
-    date_of_buy->setValidator(valid);
-    date_of_buy->setMinimumHeight(30);
+    date_of_buy->setMaximumWidth(300);
     flay->addRow(label_1, date_of_buy);
 }
 
@@ -942,22 +939,39 @@ void SellAbstr::med_amount_changed(int value) {
  * \brief Заполнение полей, если форма предназначена для редактирования.
  * \param record - объект записи.
  * \param row - номер строки в модели таблицы.
+ * \details Включает редактивроание выручки.
  */
 void SellAbstr::fill_fields(const QSqlRecord & record, const int row) {
-    date_of_buy->setText(record.field(keys[1]).value().toString());
+    QDate* date = new QDate(QDate::fromString(record.field(keys[1]).value().toString(), "dd-MM-yyyy"));
+    if (date && date->isValid()) {
+        date_of_buy->setSelectedDate(*date);
+    }
+    else {
+        date_of_buy->setSelectedDate(QDate::currentDate());
+    }
+    if (date) delete date;
     customer->setCurrentText(record.field(keys[2]).value().toString());
     medicines->setCurrentText(record.field(keys[3]).value().toString());
     pieces->setValue(record.field(keys[4]).value().toLongLong());
     QString val = record.field(keys[5]).value().toString();
     int length = val.length();
     if (length > 2) {
-        val.insert(length - 2, '.');
+        val.insert(length - 2, ',');
     }
     else {
-        val.push_front("0.");
+        val.push_front("0,");
     }
     earnings->setText(val);
     this->row = row;
+    earnings_edit_enabled(true);
+}
+
+/*!
+ * \brief Включение или отключение возможности редактирования выручки.
+ * \param enabled - режим (вкл/выкл).
+ */
+void SellAbstr::earnings_edit_enabled(const bool enabled) {
+    earnings->setEnabled(enabled);
 }
 
 /*!
@@ -969,11 +983,6 @@ QString AddSellImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
-    if (!concreteAbs->date_of_buy->hasAcceptableInput()) {
-        return "Ошибка ввода в поле \"" +
-                             concreteAbs->fields[concreteAbs->date_of_buy->objectName()] +
-                             "\"!";
-    }
     //else if (!concreteAbs->customer->hasAcceptableInput()) {
     //    return "Ошибка ввода в поле \"" +
     //                         concreteAbs->fields[concreteAbs->customer->objectName()] +
@@ -1003,15 +1012,26 @@ QString AddSellImplement::processFields(inputFields* abs) {
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
-        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_buy->text());
+        qDebug() << concreteAbs->date_of_buy->selectedDate().toString("dd-MM-yyyy");
+        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_buy->selectedDate().toString("dd-MM-yyyy"));
         rec->append(QSqlField(concreteAbs->keys[2]));
-        rec->setValue(concreteAbs->keys[2], concreteAbs->customer->currentText());
+        if (!concreteAbs->customer->currentText().isEmpty()) {
+            rec->setValue(concreteAbs->keys[2], concreteAbs->customer->currentText());
+        }
         rec->append(QSqlField(concreteAbs->keys[3]));
         rec->setValue(concreteAbs->keys[3], concreteAbs->medicines->currentText());
         rec->append(QSqlField(concreteAbs->keys[4]));
         rec->setValue(concreteAbs->keys[4], concreteAbs->pieces->text());
         rec->append(QSqlField(concreteAbs->keys[5]));
-        rec->setValue(concreteAbs->keys[5], concreteAbs->earnings->text());
+        QString earnings_str = concreteAbs->earnings->text().replace('.', ',');
+        int val = 0;
+        if (earnings_str.contains(',')) {
+            val = earnings_str.remove(',').toInt();
+        }
+        else {
+            val = earnings_str.toInt() * 100;
+        }
+        rec->setValue(concreteAbs->keys[5], val);
         emit Implement::exec_clicked_signal(rec);
         delete rec;
     }
@@ -1030,9 +1050,9 @@ QString FindSellImplement::processFields(inputFields * abs) {
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
     QString where;
-    if (concreteAbs->date_of_buy->hasAcceptableInput()) {
+    if (concreteAbs->date_of_buy->isEnabled()) {
         where += concreteAbs->date_of_buy->objectName() +
-                " = \"" + concreteAbs->date_of_buy->text() +
+                " = \"" + concreteAbs->date_of_buy->selectedDate().toString("dd-MM-yyyy") +
                 "\" AND ";
     }
     if (concreteAbs->customer->currentText().length() == 8) {
@@ -1064,11 +1084,6 @@ QString EditSellImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
-    if (!concreteAbs->date_of_buy->hasAcceptableInput()) {
-        return "Ошибка ввода в поле \"" +
-                             concreteAbs->fields[concreteAbs->date_of_buy->objectName()] +
-                             "\"!";
-    }
     //else if (concreteAbs->customer->currentText().isEmpty()) {
     //    return "Ошибка ввода в поле \"" +
     //                         concreteAbs->fields[concreteAbs->customer->objectName()] +
@@ -1098,13 +1113,23 @@ QString EditSellImplement::processFields(inputFields * abs) {
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
-        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_buy->text());
+        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_buy->selectedDate().toString("dd-MM-yyyy"));
         rec->append(QSqlField(concreteAbs->keys[2]));
         rec->setValue(concreteAbs->keys[2], concreteAbs->customer->currentText());
         rec->append(QSqlField(concreteAbs->keys[3]));
         rec->setValue(concreteAbs->keys[3], concreteAbs->medicines->currentText());
         rec->append(QSqlField(concreteAbs->keys[4]));
         rec->setValue(concreteAbs->keys[4], concreteAbs->pieces->text());
+        rec->append(QSqlField(concreteAbs->keys[5]));
+        QString earnings_str = concreteAbs->earnings->text().replace('.', ',');
+        int val = 0;
+        if (earnings_str.contains(',')) {
+            val = earnings_str.remove(',').toInt();
+        }
+        else {
+            val = earnings_str.toInt() * 100;
+        }
+        rec->setValue(concreteAbs->keys[5], val);
         emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
         delete rec;
     }
