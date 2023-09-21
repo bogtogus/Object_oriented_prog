@@ -237,13 +237,17 @@ void BonusProgWindow::clicked_on_find() {
 void BonusProgWindow::find_record_db(const QString& where) {
     qDebug() << where;
     entity->setFilter(where);
-    resetsrchact->setEnabled(true);
     if (entity->rowCount() == 0) {
         QMessageBox::warning(this, "Ошибка!",
                              "По заданному запросу ничего не найдено!");
+        entity->setFilter("");
+        if (entity->rowCount() == 0) {
+            entity->select();
+        }
     }
     else {
         InFAbs->goback();
+        resetsrchact->setEnabled(true);
         delfoundact->setEnabled(true);
     }
 }

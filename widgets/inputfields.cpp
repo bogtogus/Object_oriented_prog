@@ -148,13 +148,11 @@ void MedsAbstr::produceField3() {
     label_3->setObjectName("label_3");
     label_3->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_3);
-    date_of_manuf = new QLineEdit("", this);
+    date_of_manuf = new QCalendarWidget(this);
     date_of_manuf->setObjectName(keys[3]);
-    date_of_manuf->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
-    QRegularExpression regexp("\\d\\d-\\d\\d-\\d{4}");
-    QValidator* valid = new QRegularExpressionValidator(regexp, this);
-    date_of_manuf->setValidator(valid);
     date_of_manuf->setMinimumHeight(30);
+    date_of_manuf->setMaximumWidth(300);
+    date_of_manuf->setMinimumDate(QDate(2000, 1, 1));
     flay->addRow(label_3, date_of_manuf);
     label_3 = nullptr;
 }
@@ -167,13 +165,11 @@ void MedsAbstr::produceField4() {
     label_4->setObjectName("label_4");
     label_4->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_4);
-    expiry_date = new QLineEdit("", this);
-    expiry_date->setObjectName(keys[4]);
-    expiry_date->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
-    QRegularExpression regexp("\\d\\d-\\d\\d-\\d{4}");
-    QValidator* valid = new QRegularExpressionValidator(regexp, this);
-    expiry_date->setValidator(valid);
+    expiry_date = new QCalendarWidget(this);
+    expiry_date->setObjectName(keys[4]);;
     expiry_date->setMinimumHeight(30);
+    expiry_date->setMaximumWidth(300);
+    expiry_date->setMinimumDate(QDate(2000, 1, 1));
     flay->addRow(label_4, expiry_date);
     label_4 = nullptr;
 }
@@ -264,8 +260,20 @@ void MedsAbstr::finalization() {
 void MedsAbstr::fill_fields(const QSqlRecord & record, const int row) {
     manufactorer->setText(record.field(keys[1]).value().toString());
     name->setText(record.field(keys[2]).value().toString());
-    date_of_manuf->setText(record.field(keys[3]).value().toString());
-    expiry_date->setText(record.field(keys[4]).value().toString());
+    QDate* date = new QDate(QDate::fromString(record.field(keys[3]).value().toString(), "dd-MM-yyyy"));
+    if (date && date->isValid()) {
+        date_of_manuf->setSelectedDate(*date);
+    } else {
+        date_of_manuf->setSelectedDate(QDate::currentDate());
+    }
+    delete date;
+    date = new QDate(QDate::fromString(record.field(keys[4]).value().toString(), "dd-MM-yyyy"));
+    if (date && date->isValid()) {
+        expiry_date->setSelectedDate(*date);
+    } else {
+        expiry_date->setSelectedDate(QDate::currentDate());
+    }
+    delete date;
     on_prescription->setChecked(record.field(keys[5]).value().toBool());
     pieces->setText(record.field(keys[6]).value().toString());
     QString val = record.field(keys[7]).value().toString();
@@ -299,12 +307,7 @@ QString AddMedsImplement::processFields(inputFields* abs) {
                              concreteAbs->fields[concreteAbs->name->objectName()] +
                              "\"!";
     }
-    else if (!concreteAbs->date_of_manuf->hasAcceptableInput()) {
-        return "Ошибка ввода в поле \"" +
-                             concreteAbs->fields[concreteAbs->date_of_manuf->objectName()] +
-                             "\"!";
-    }
-    else if (!concreteAbs->expiry_date->hasAcceptableInput()) {
+    else if (concreteAbs->date_of_manuf->selectedDate().daysTo(concreteAbs->expiry_date->selectedDate()) <= 0) {
         return "Ошибка ввода в поле \"" +
                              concreteAbs->fields[concreteAbs->expiry_date->objectName()] +
                              "\"!";
@@ -328,11 +331,11 @@ QString AddMedsImplement::processFields(inputFields* abs) {
         rec->append(QSqlField(concreteAbs->keys[2]));
         rec->setValue(concreteAbs->keys[2], concreteAbs->name->text());
         rec->append(QSqlField(concreteAbs->keys[3]));
-        rec->setValue(concreteAbs->keys[3], concreteAbs->date_of_manuf->text());
+        rec->setValue(concreteAbs->keys[3], concreteAbs->date_of_manuf->selectedDate().toString("dd-MM-yyyy"));
         rec->append(QSqlField(concreteAbs->keys[4]));
-        rec->setValue(concreteAbs->keys[4], concreteAbs->expiry_date->text());
+        rec->setValue(concreteAbs->keys[4], concreteAbs->expiry_date->selectedDate().toString("dd-MM-yyyy"));
         rec->append(QSqlField(concreteAbs->keys[5]));
-        rec->setValue(concreteAbs->keys[5], concreteAbs->on_prescription->isChecked());
+        rec->setValue(concreteAbs->keys[5], (int)concreteAbs->on_prescription->isChecked());
         rec->append(QSqlField(concreteAbs->keys[6]));
         rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
         rec->append(QSqlField(concreteAbs->keys[7]));
@@ -364,13 +367,13 @@ QString FindMedsImplement::processFields(inputFields * abs) {
         where += concreteAbs->name->objectName() +
                 " LIKE \"%" + concreteAbs->name->text() + "%\" AND ";
     }
-    if (concreteAbs->date_of_manuf->hasAcceptableInput()) {
+    if (concreteAbs->date_of_manuf->selectedDate().isValid()) {
         where += concreteAbs->date_of_manuf->objectName() +
-                " = \"" + concreteAbs->date_of_manuf->text() + "\" AND ";
+                " = \"" + concreteAbs->date_of_manuf->selectedDate().toString("dd-MM-yyyy") + "\" AND ";
     }
-    if (concreteAbs->expiry_date->hasAcceptableInput()) {
+    if (concreteAbs->expiry_date->selectedDate().isValid()) {
         where += concreteAbs->expiry_date->objectName() +
-                " = \"" + concreteAbs->expiry_date->text() + "\" AND ";
+                " = \"" + concreteAbs->expiry_date->selectedDate().toString("dd-MM-yyyy") + "\" AND ";
     }
     if (concreteAbs->on_prescription->isChecked()) {
         where += concreteAbs->on_prescription->objectName() +
@@ -416,12 +419,7 @@ QString EditMedsImplement::processFields(inputFields* abs) {
                              concreteAbs->fields[concreteAbs->name->objectName()] +
                              "\"!";
     }
-    else if (!concreteAbs->date_of_manuf->hasAcceptableInput()) {
-        return "Ошибка ввода в поле \"" +
-                             concreteAbs->fields[concreteAbs->date_of_manuf->objectName()] +
-                             "\"!";
-    }
-    else if (!concreteAbs->expiry_date->hasAcceptableInput()) {
+    else if (concreteAbs->date_of_manuf->selectedDate().daysTo(concreteAbs->expiry_date->selectedDate()) <= 0) {
         return "Ошибка ввода в поле \"" +
                              concreteAbs->fields[concreteAbs->expiry_date->objectName()] +
                              "\"!";
@@ -445,11 +443,11 @@ QString EditMedsImplement::processFields(inputFields* abs) {
         rec->append(QSqlField(concreteAbs->keys[2]));
         rec->setValue(concreteAbs->keys[2], concreteAbs->name->text());
         rec->append(QSqlField(concreteAbs->keys[3]));
-        rec->setValue(concreteAbs->keys[3], concreteAbs->date_of_manuf->text());
+        rec->setValue(concreteAbs->keys[3], concreteAbs->date_of_manuf->selectedDate().toString("dd-MM-yyyy"));
         rec->append(QSqlField(concreteAbs->keys[4]));
-        rec->setValue(concreteAbs->keys[4], concreteAbs->expiry_date->text());
+        rec->setValue(concreteAbs->keys[4], concreteAbs->expiry_date->selectedDate().toString("dd-MM-yyyy"));
         rec->append(QSqlField(concreteAbs->keys[5]));
-        rec->setValue(concreteAbs->keys[5], concreteAbs->on_prescription->isChecked());
+        rec->setValue(concreteAbs->keys[5], (int)concreteAbs->on_prescription->isChecked());
         rec->append(QSqlField(concreteAbs->keys[6]));
         rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
         rec->append(QSqlField(concreteAbs->keys[7]));

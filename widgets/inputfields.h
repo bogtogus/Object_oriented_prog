@@ -59,8 +59,8 @@ private:
     // Элементы формы
     QLineEdit* manufactorer;
     QLineEdit* name;
-    QLineEdit* date_of_manuf;
-    QLineEdit* expiry_date;
+    QCalendarWidget* date_of_manuf;
+    QCalendarWidget* expiry_date;
     QCheckBox* on_prescription;
     QLineEdit* pieces;
     QLineEdit* price;

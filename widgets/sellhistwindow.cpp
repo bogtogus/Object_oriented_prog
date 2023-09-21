@@ -313,13 +313,17 @@ void SellHistWindow::clicked_on_find() {
 void SellHistWindow::find_record_db(const QString& where) {
     qDebug() << where;
     SEntity->setFilter(where);
-    resetsrchact->setEnabled(true);
     if (SEntity->rowCount() == 0) {
         QMessageBox::warning(this, "Ошибка!",
                              "По заданному запросу ничего не найдено!");
+        SEntity->setFilter("");
+        if (SEntity->rowCount() == 0) {
+            SEntity->select();
+        }
     }
     else {
         InFAbs->goback();
+        resetsrchact->setEnabled(true);
         delfoundact->setEnabled(true);
     }
 }
