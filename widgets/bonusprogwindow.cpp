@@ -18,7 +18,7 @@ BonusProgWindow::BonusProgWindow(QWidget *parent,
 {
     qDebug() << "CRT bonus";
     entity = BEntity;
-    InFAbs = nullptr;
+    InpFieldsAbstr = nullptr;
     ui->setupUi(this);
     this->setWindowTitle("База бонусных карт");
     this->setGeometry(prnt->geometry());
@@ -32,12 +32,12 @@ BonusProgWindow::BonusProgWindow(QWidget *parent,
     revertact->setEnabled(false);
     saveact->setEnabled(false);
 
-    QVector<QString> temp = entity->get_fnames();
+    QVector<QString> temp = entity->get_readable_names();
+    keys = entity->get_column_names();
     init_table();
     ui->verticalLayout->insertWidget(0, menubar);
     ui->verticalLayout->insertWidget(1, toolbar);
-    for (int i = 0; i < entity->get_model()->record().count(); i++) {
-        keys.append(entity->get_model()->record().fieldName(i));
+    for (int i = 0; i < entity->columnCount(); i++) {
         fields.insert(keys[i], temp[i]);
     }
     temp.clear();
@@ -139,14 +139,14 @@ void BonusProgWindow::connect_menu() {
 void BonusProgWindow::clicked_on_add() {
     impl = QSharedPointer<Implement>(new AddBonusImplement());
     QMap<QString, QString> titles = {{"title", "Добавить бонусную карту."}, {"exec", "Добавить"}};
-    InFAbs = new BonusAbstr(titles, fields, keys, impl, this);
+    InpFieldsAbstr = new BonusAbstr(titles, fields, keys, impl, this);
     titles.clear();
     connect(impl.get(),
             QOverload<const QSqlRecord*>::of(&Implement::exec_clicked_signal),
             this,
             &BonusProgWindow::add_record_db);
     impl.reset();
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -162,6 +162,8 @@ void BonusProgWindow::add_record_db(const QSqlRecord* record) {
     else {
         QMessageBox::warning(this, "Ошибка!",
                              "Ошибка добвления записи в таблицу!");
+        qDebug() << entity->lastError();
+        qDebug() << *record;
     }
     //fields_names.clear();
     saveact->setEnabled(true);
@@ -180,15 +182,15 @@ void BonusProgWindow::clicked_on_edit() {
     int row = selection->selectedIndexes().at(0).row();
     QSqlRecord record = entity->get_record(row);
     QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
-    InFAbs = new BonusAbstr(titles, fields, keys, impl, this);
-    InFAbs->fill_fields(record, row);
+    InpFieldsAbstr = new BonusAbstr(titles, fields, keys, impl, this);
     titles.clear();
+    InpFieldsAbstr->fill_fields(record, row);
     connect(impl.get(),
             QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
             this,
             &BonusProgWindow::edit_record_db);
     impl.reset();
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -221,13 +223,13 @@ void BonusProgWindow::edit_record_db(const QSqlRecord & record, const int row) {
 void BonusProgWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindBonusImplement());
     QMap<QString, QString> titles = {{"title", "Найти бонусную карту."}, {"exec", "Найти"}};
-    InFAbs = new BonusAbstr(titles, fields, keys, impl, this);
+    InpFieldsAbstr = new BonusAbstr(titles, fields, keys, impl, this);
     connect(impl.get(),
             QOverload<const QString&>::of(&Implement::exec_clicked_signal),
             this,
             &BonusProgWindow::find_record_db);
     impl.reset();
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -246,7 +248,7 @@ void BonusProgWindow::find_record_db(const QString& where) {
         }
     }
     else {
-        InFAbs->goback();
+        InpFieldsAbstr->goback();
         resetsrchact->setEnabled(true);
         delfoundact->setEnabled(true);
     }

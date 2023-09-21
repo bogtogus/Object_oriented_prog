@@ -26,7 +26,7 @@ SellHistWindow::SellHistWindow(QWidget *parent,
     MEntity = me;
     BEntity = be;
     SEntity = se;
-    InFAbs = nullptr;
+    InpFieldsAbstr = nullptr;
     record_being_edited = nullptr;
     first_add = -1;
     ui->setupUi(this);
@@ -38,10 +38,10 @@ SellHistWindow::SellHistWindow(QWidget *parent,
     this->setWindowTitle("История продаж");
     this->setGeometry(prnt->geometry());
     setAttribute(Qt::WA_DeleteOnClose);
-    QVector<QString> temp = SEntity->get_fnames();
+    QVector<QString> temp = SEntity->get_readable_names();
+    keys = SEntity->get_column_names();
     init_table();
-    for (int i = 0; i < SEntity->get_model()->record().count(); i++) {
-        keys.append(SEntity->get_model()->record().fieldName(i));
+    for (int i = 0; i < SEntity->columnCount(); i++) {
         fields.insert(keys[i], temp[i]);
     }
     temp.clear();
@@ -151,14 +151,14 @@ void SellHistWindow::clicked_on_add() {
     qDebug() << fields;
     impl = QSharedPointer<Implement>(new AddSellImplement());
     QMap<QString, QString> titles = {{"title", "Добавить запись."}, {"exec", "Добавить"}};
-    InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
+    InpFieldsAbstr = new SellAbstr(titles, fields, keys, SEntity, impl, this);
     titles.clear();
     connect(impl.get(),
             QOverload<const QSqlRecord*>::of(&Implement::exec_clicked_signal),
             this,
             &SellHistWindow::add_record_db);
     impl.reset();
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -222,8 +222,8 @@ void SellHistWindow::clicked_on_edit() {
     int row = selection->selectedIndexes().at(0).row();
     QSqlRecord record = SEntity->get_record(row);
     QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
-    InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
-    InFAbs->fill_fields(record, row);
+    InpFieldsAbstr = new SellAbstr(titles, fields, keys, SEntity, impl, this);
+    InpFieldsAbstr->fill_fields(record, row);
     titles.clear();
     connect(impl.get(),
             QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
@@ -231,7 +231,7 @@ void SellHistWindow::clicked_on_edit() {
             &SellHistWindow::edit_record_db);
     impl.reset();
     record_being_edited = new QSqlRecord(record);
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -297,13 +297,13 @@ void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
 void SellHistWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindSellImplement());
     QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
-    InFAbs = new SellAbstr(titles, fields, keys, SEntity, impl, this);
+    InpFieldsAbstr = new SellAbstr(titles, fields, keys, SEntity, impl, this, true);
     connect(impl.get(),
             QOverload<const QString&>::of(&Implement::exec_clicked_signal),
             this,
             &SellHistWindow::find_record_db);
     impl.reset();
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -322,7 +322,7 @@ void SellHistWindow::find_record_db(const QString& where) {
         }
     }
     else {
-        InFAbs->goback();
+        InpFieldsAbstr->goback();
         resetsrchact->setEnabled(true);
         delfoundact->setEnabled(true);
     }

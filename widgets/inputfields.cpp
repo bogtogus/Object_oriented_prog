@@ -10,7 +10,8 @@
 inputFields::inputFields(QWidget *parent,
                          const QMap<QString, QString>& titles,
                          const QMap<QString, QString>& fields,
-                         const QVector<QString>& keys) :
+                         const QVector<QString>& keys,
+                         bool search_mode) :
     aChildWin(parent),
     ui(new Ui::inputFields)
 {
@@ -22,6 +23,7 @@ inputFields::inputFields(QWidget *parent,
     this->titles = titles;
     this->fields = fields;
     this->keys = keys;
+    this->search_mode = search_mode;
     qDebug() << "CRT InputFields";
 }
 
@@ -76,7 +78,8 @@ MedsAbstr::MedsAbstr(const QMap<QString, QString>& titles,
                        const QMap<QString, QString>& fields,
                        const QVector<QString>& keys,
                        QSharedPointer<Implement> impl,
-                       QWidget* parent) : inputFields(parent, titles, fields, keys) {
+                       QWidget* parent,
+                       bool searching) : inputFields(parent, titles, fields, keys, searching) {
     this->impl = impl;
     row = -1;
     buildLayout();
@@ -148,12 +151,37 @@ void MedsAbstr::produceField3() {
     label_3->setObjectName("label_3");
     label_3->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_3);
-    date_of_manuf = new QCalendarWidget(this);
+    if (search_mode) {
+        date_of_manuf_group = new QWidget(this);
+        date_of_manuf_group->setLayout(new QHBoxLayout());
+        date_of_manuf = new QCalendarWidget(date_of_manuf_group);
+        date_of_manuf_group->layout()->addWidget(date_of_manuf);
+        date_of_manuf_switch = new QCheckBox(date_of_manuf_group);
+        date_of_manuf_switch->setStyleSheet("QCheckBox { font: regular 12px; }"
+                                            "QCheckBox::indicator {"
+                                            "width: 16px;"
+                                            "height: 16px;"
+                                            "}");
+        date_of_manuf_switch->setTristate(false);
+        date_of_manuf_switch->setChecked(false);
+        date_of_manuf_group->layout()->addWidget(date_of_manuf_switch);
+        date_of_manuf->setEnabled(false);
+        connect(date_of_manuf_switch, &QCheckBox::stateChanged, date_of_manuf, &QCalendarWidget::setEnabled);
+    }
+    else {
+        date_of_manuf_group = nullptr;
+        date_of_manuf_switch = nullptr;
+        date_of_manuf = new QCalendarWidget(this);
+    }
     date_of_manuf->setObjectName(keys[3]);
     date_of_manuf->setMinimumHeight(30);
     date_of_manuf->setMaximumWidth(300);
     date_of_manuf->setMinimumDate(QDate(2000, 1, 1));
-    flay->addRow(label_3, date_of_manuf);
+    if (search_mode) {
+        flay->addRow(label_3, date_of_manuf_group);
+    } else {
+        flay->addRow(label_3, date_of_manuf);
+    }
     label_3 = nullptr;
 }
 
@@ -165,12 +193,37 @@ void MedsAbstr::produceField4() {
     label_4->setObjectName("label_4");
     label_4->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_4);
-    expiry_date = new QCalendarWidget(this);
+    if (search_mode) {
+        expiry_date_group = new QWidget(this);
+        expiry_date_group->setLayout(new QHBoxLayout());
+        expiry_date = new QCalendarWidget(expiry_date_group);
+        expiry_date_group->layout()->addWidget(expiry_date);
+        expiry_date_switch = new QCheckBox(expiry_date_group);
+        expiry_date_switch->setStyleSheet("QCheckBox { font: regular 12px; }"
+                                          "QCheckBox::indicator {"
+                                          "width: 16px;"
+                                          "height: 16px;"
+                                          "}");
+        expiry_date_switch->setTristate(false);
+        expiry_date_switch->setChecked(false);
+        expiry_date_group->layout()->addWidget(expiry_date_switch);
+        expiry_date->setEnabled(false);
+        connect(expiry_date_switch, &QCheckBox::stateChanged, expiry_date, &QCalendarWidget::setEnabled);
+    }
+    else {
+        expiry_date_group = nullptr;
+        expiry_date_switch = nullptr;
+        expiry_date = new QCalendarWidget(this);
+    }
     expiry_date->setObjectName(keys[4]);;
     expiry_date->setMinimumHeight(30);
     expiry_date->setMaximumWidth(300);
     expiry_date->setMinimumDate(QDate(2000, 1, 1));
-    flay->addRow(label_4, expiry_date);
+    if (search_mode) {
+        flay->addRow(label_4, expiry_date_group);
+    } else {
+        flay->addRow(label_4, expiry_date);
+    }
     label_4 = nullptr;
 }
 
@@ -367,11 +420,11 @@ QString FindMedsImplement::processFields(inputFields * abs) {
         where += concreteAbs->name->objectName() +
                 " LIKE \"%" + concreteAbs->name->text() + "%\" AND ";
     }
-    if (concreteAbs->date_of_manuf->selectedDate().isValid()) {
+    if (concreteAbs->date_of_manuf->isEnabled() && concreteAbs->date_of_manuf->selectedDate().isValid()) {
         where += concreteAbs->date_of_manuf->objectName() +
                 " = \"" + concreteAbs->date_of_manuf->selectedDate().toString("dd-MM-yyyy") + "\" AND ";
     }
-    if (concreteAbs->expiry_date->selectedDate().isValid()) {
+    if (concreteAbs->expiry_date->isEnabled() && concreteAbs->expiry_date->selectedDate().isValid()) {
         where += concreteAbs->expiry_date->objectName() +
                 " = \"" + concreteAbs->expiry_date->selectedDate().toString("dd-MM-yyyy") + "\" AND ";
     }
@@ -728,7 +781,8 @@ SellAbstr::SellAbstr(const QMap<QString, QString>& titles,
                        const QVector<QString>& keys,
                        const SellEntity* en,
                        QSharedPointer<Implement> impl,
-                       QWidget* parent) : inputFields(parent, titles, fields, keys) {
+                       QWidget* parent,
+                       bool searching) : inputFields(parent, titles, fields, keys, searching) {
     this->impl = impl;
     this->entity = en;
     edit_mode = false;
@@ -772,11 +826,35 @@ void SellAbstr::produceField1() {
     label_1->setObjectName("label_1");
     label_1->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_1);
-    date_of_buy = new QCalendarWidget(this);
-    date_of_buy->setObjectName(keys[1]);
-    date_of_buy->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
-    date_of_buy->setMaximumWidth(300);
-    flay->addRow(label_1, date_of_buy);
+    if(search_mode)  {
+        date_of_sale_group = new QWidget(this);
+        date_of_sale_group->setLayout(new QHBoxLayout());
+        date_of_sale = new QCalendarWidget(date_of_sale_group);
+        date_of_sale_group->layout()->addWidget(date_of_sale);
+        date_of_sale_switch = new QCheckBox(date_of_sale_group);
+        date_of_sale_switch->setStyleSheet("QCheckBox { font: regular 12px; }"
+                                            "QCheckBox::indicator {"
+                                            "width: 16px;"
+                                            "height: 16px;"
+                                            "}");
+        date_of_sale_switch->setTristate(false);
+        date_of_sale_switch->setChecked(false);
+        date_of_sale_group->layout()->addWidget(date_of_sale_switch);
+        date_of_sale->setEnabled(false);
+        connect(date_of_sale_switch, &QCheckBox::stateChanged, date_of_sale, &QCalendarWidget::setEnabled);
+    } else {
+        date_of_sale_group = nullptr;
+        date_of_sale_switch = nullptr;
+        date_of_sale = new QCalendarWidget(this);
+    }
+    date_of_sale->setObjectName(keys[1]);
+    date_of_sale->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
+    date_of_sale->setMaximumWidth(300);
+    if (search_mode) {
+        flay->addRow(label_1, date_of_sale_group);
+    } else {
+        flay->addRow(label_1, date_of_sale);
+    }
 }
 
 /*!
@@ -787,20 +865,20 @@ void SellAbstr::produceField2() {
     label_2->setObjectName("label_2");
     label_2->setStyleSheet(LABEL_STYLE);
     //labels.push_back(label_2);
-    customer = new QComboBox(this);
-    customer->setObjectName(keys[2]);
-    customer->setStyleSheet("QComboBox { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
-    customer->setMinimumHeight(30);
-    customer->addItem("");
+    bonus_card_num = new QComboBox(this);
+    bonus_card_num->setObjectName(keys[2]);
+    bonus_card_num->setStyleSheet("QComboBox { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
+    bonus_card_num->setMinimumHeight(30);
+    bonus_card_num->addItem("");
     //qDebug() << "R  " << card_numbers;
     //qDebug() << medicines_ids;
     QVector<QString> card_numbers = entity->get_all_cards();
     QVector<QString>::iterator it = card_numbers.begin();
     for (; it != card_numbers.end(); it++) {
-        customer->addItem(*it);
+        bonus_card_num->addItem(*it);
     }
-    connect(customer, QOverload<const QString&>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::card_changed);
-    flay->addRow(label_2, customer);
+    connect(bonus_card_num, QOverload<const QString&>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::card_changed);
+    flay->addRow(label_2, bonus_card_num);
     label_2 = nullptr;
 
 }
@@ -858,7 +936,7 @@ void SellAbstr::produceField5() {
     earnings->setObjectName(keys[5]);
     earnings->setStyleSheet("QLineEdit { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
     earnings->setMinimumHeight(30);
-    earnings->setReadOnly(true);
+    earnings->setReadOnly(!search_mode);
     QRegularExpression regexp("[+]?\\d{1,20}([.,]\\d{1,2})?");
     QValidator* valid = new QRegularExpressionValidator(regexp, this);
     earnings->setValidator(valid);
@@ -867,13 +945,13 @@ void SellAbstr::produceField5() {
 }
 
 /*!
- * \brief Построение поля с выручкой.
+ * \brief Построение поля с указанием количества списываемых баллов.
  */
 void SellAbstr::produceField6() {
     bonuswidget = new QWidget(this);
     bonuswidget->setObjectName("bonuswidget");
     bonuslay = new QHBoxLayout(bonuswidget);
-    QLabel* bonuses_withdraw_text = new QLabel("Бонусов к списанию: ", bonuswidget);
+    QLabel* bonuses_withdraw_text = new QLabel("Баллов к списанию: ", bonuswidget);
     bonuses_withdraw_text->setObjectName("bonuses_withdraw_text");
     bonuses_withdraw_text->setStyleSheet(LABEL_STYLE);
     bonuslay->addWidget(bonuses_withdraw_text);
@@ -891,7 +969,7 @@ void SellAbstr::produceField6() {
     bonuswidget->setObjectName("bonuses_to_withdraw");
     connect(bonuses_to_withdraw, &QLineEdit::textEdited, this, &SellAbstr::bonus_withdraw_edited);
     bonuslay->addWidget(bonuses_to_withdraw);
-    withdraw_all_bonuses = new QCheckBox("Снять все бонусы");
+    withdraw_all_bonuses = new QCheckBox("Снять все баллы");
     withdraw_all_bonuses->setObjectName("withdraw_all_bonuses");
     withdraw_all_bonuses->setTristate(false);
     withdraw_all_bonuses->setStyleSheet("QCheckBox { font-family: \"Sans Serif\"; font-style: regular; font-size: 18px; }");
@@ -943,28 +1021,29 @@ void SellAbstr::med_changed(const QString& med_id) {
         if (earnings) earnings->setText("");
         bonuswidget->setVisible(false);
         bonuses_to_withdraw->setReadOnly(true);
-        return;
-    }
-    bonuswidget->setVisible((bool)(customer->currentIndex() != 0));
-    pieces->setEnabled(true);
-    int amount = 0;
-    //int price = 0;
-    if (!entity->get_med_amount(med_id.toInt(), amount)) {
-        pieces->setMinimum(0);
-        pieces->setMaximum(0);
-        basic_price = -1;
-        current_unit_price = -1;
     }
     else {
-        pieces->setMaximum(amount);
-        if (entity->get_med_price(med_id.toInt(), current_unit_price)) {
-            basic_price = current_unit_price * pieces->value();
-        } else {
+        bonuswidget->setVisible((bool)(bonus_card_num->currentIndex() != 0));
+        pieces->setEnabled(true);
+        int amount = 0;
+        //int price = 0;
+        if (!entity->get_med_amount(med_id.toInt(), amount)) {
+            pieces->setMinimum(0);
+            pieces->setMaximum(0);
             basic_price = -1;
             current_unit_price = -1;
         }
+        else {
+            pieces->setMaximum(amount);
+            if (entity->get_med_price(med_id.toInt(), current_unit_price)) {
+                basic_price = current_unit_price * pieces->value();
+            } else {
+                basic_price = -1;
+                current_unit_price = -1;
+            }
+        }
+        recalc_earnings();
     }
-    recalc_earnings();
 }
 
 /*!
@@ -982,8 +1061,9 @@ void SellAbstr::med_amount_changed(int value) {
 }
 
 void SellAbstr::card_changed(const QString&) {
-    bonuswidget->setVisible((bool)(customer->currentIndex() != 0 && medicines->currentIndex() != 0));
-    if (customer->currentIndex() != 0) recalc_earnings();
+    bonuswidget->setVisible((bool)(bonus_card_num->currentIndex() != 0 && medicines->currentIndex() != 0));
+    if (bonus_card_num->currentIndex() != 0)
+        recalc_earnings();
 }
 
 void SellAbstr::withdraw_all_state(int) {
@@ -991,8 +1071,10 @@ void SellAbstr::withdraw_all_state(int) {
 }
 
 void SellAbstr::bonus_withdraw_edited(const QString &) {
-    if (!edit_mode) recalc_earnings();
-    else bonuses_to_withdraw->setReadOnly(false);
+    if (!edit_mode)
+        recalc_earnings();
+    else
+        bonuses_to_withdraw->setReadOnly(false);
 }
 
 /*!
@@ -1004,7 +1086,7 @@ void SellAbstr::recalc_earnings() {
     if (medicines->currentIndex() > 0) {
         if (withdraw_all_bonuses->isVisible() && withdraw_all_bonuses->checkState() == Qt::Checked) {
             int bonuses = 0;
-            if (entity->get_card_balance(customer->currentText().toInt(), bonuses)) {
+            if (entity->get_card_balance(bonus_card_num->currentText().toInt(), bonuses)) {
                 //bonuses_to_withdraw->setEnabled(true);
                 int result = 0;
                 int bonuses_kop = bonuses * 100;
@@ -1020,7 +1102,7 @@ void SellAbstr::recalc_earnings() {
             }
             else {
                 bonuses_to_withdraw->setReadOnly(true);
-                bonuses_to_withdraw->setText("Бонусов на карте нет.");
+                bonuses_to_withdraw->setText("Ошибка.");
             }
         }
         else if (withdraw_all_bonuses->isVisible()) {
@@ -1046,13 +1128,14 @@ void SellAbstr::recalc_earnings() {
 void SellAbstr::fill_fields(const QSqlRecord & record, const int row) {
     QDate* date = new QDate(QDate::fromString(record.field(keys[1]).value().toString(), "dd-MM-yyyy"));
     if (date && date->isValid()) {
-        date_of_buy->setSelectedDate(*date);
+        date_of_sale->setSelectedDate(*date);
     }
     else {
-        date_of_buy->setSelectedDate(QDate::currentDate());
+        date_of_sale->setSelectedDate(QDate::currentDate());
     }
-    if (date) delete date;
-    customer->setCurrentText(record.field(keys[2]).value().toString());
+    if (date)
+        delete date;
+    bonus_card_num->setCurrentText(record.field(keys[2]).value().toString());
     medicines->setCurrentText(record.field(keys[3]).value().toString());
     pieces->setValue(record.field(keys[4]).value().toLongLong());
     QString val = record.field(keys[5]).value().toString();
@@ -1092,9 +1175,9 @@ QString AddSellImplement::processFields(inputFields* abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
-    //else if (!concreteAbs->customer->hasAcceptableInput()) {
+    //else if (!concreteAbs->bonus_card_num->hasAcceptableInput()) {
     //    return "Ошибка ввода в поле \"" +
-    //                         concreteAbs->fields[concreteAbs->customer->objectName()] +
+    //                         concreteAbs->fields[concreteAbs->bonus_card_num->objectName()] +
     //                         "\"!";
     //}
     else if (concreteAbs->medicines->currentText().isEmpty()) {
@@ -1127,11 +1210,11 @@ QString AddSellImplement::processFields(inputFields* abs) {
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
-        qDebug() << concreteAbs->date_of_buy->selectedDate().toString("dd-MM-yyyy");
-        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_buy->selectedDate().toString("dd-MM-yyyy"));
+        qDebug() << concreteAbs->date_of_sale->selectedDate().toString("dd-MM-yyyy");
+        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_sale->selectedDate().toString("dd-MM-yyyy"));
         rec->append(QSqlField(concreteAbs->keys[2]));
-        if (!concreteAbs->customer->currentText().isEmpty()) {
-            rec->setValue(concreteAbs->keys[2], concreteAbs->customer->currentText());
+        if (!concreteAbs->bonus_card_num->currentText().isEmpty()) {
+            rec->setValue(concreteAbs->keys[2], concreteAbs->bonus_card_num->currentText());
         }
         rec->append(QSqlField(concreteAbs->keys[3]));
         rec->setValue(concreteAbs->keys[3], concreteAbs->medicines->currentText());
@@ -1167,14 +1250,14 @@ QString FindSellImplement::processFields(inputFields * abs) {
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
     QString where;
-    if (concreteAbs->date_of_buy->isEnabled()) {
-        where += concreteAbs->date_of_buy->objectName() +
-                " = \"" + concreteAbs->date_of_buy->selectedDate().toString("dd-MM-yyyy") +
+    if (concreteAbs->date_of_sale->isEnabled()) {
+        where += concreteAbs->date_of_sale->objectName() +
+                " = \"" + concreteAbs->date_of_sale->selectedDate().toString("dd-MM-yyyy") +
                 "\" AND ";
     }
-    if (concreteAbs->customer->currentText().length() == 8) {
-        where += concreteAbs->customer->objectName() +
-                " = \"" + concreteAbs->customer->currentText() +
+    if (concreteAbs->bonus_card_num->currentText().length() == 8) {
+        where += concreteAbs->bonus_card_num->objectName() +
+                " = \"" + concreteAbs->bonus_card_num->currentText() +
                 "\" AND ";
     }
     if (!concreteAbs->medicines->currentText().isEmpty()) {
@@ -1206,9 +1289,9 @@ QString EditSellImplement::processFields(inputFields * abs) {
     if (abs == nullptr) return "Undefined";
     SellAbstr* concreteAbs = qobject_cast<SellAbstr*>(abs);
     if (concreteAbs == nullptr) return "Undefined";
-    //else if (concreteAbs->customer->currentText().isEmpty()) {
+    //else if (concreteAbs->bonus_card_num->currentText().isEmpty()) {
     //    return "Ошибка ввода в поле \"" +
-    //                         concreteAbs->fields[concreteAbs->customer->objectName()] +
+    //                         concreteAbs->fields[concreteAbs->bonus_card_num->objectName()] +
     //                         "\"!";
     //}
     else if (concreteAbs->medicines->currentText().isEmpty()) {
@@ -1241,9 +1324,9 @@ QString EditSellImplement::processFields(inputFields * abs) {
     else {
         QSqlRecord* rec = new QSqlRecord();
         rec->append(QSqlField(concreteAbs->keys[1]));
-        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_buy->selectedDate().toString("dd-MM-yyyy"));
+        rec->setValue(concreteAbs->keys[1], concreteAbs->date_of_sale->selectedDate().toString("dd-MM-yyyy"));
         rec->append(QSqlField(concreteAbs->keys[2]));
-        rec->setValue(concreteAbs->keys[2], concreteAbs->customer->currentText());
+        rec->setValue(concreteAbs->keys[2], concreteAbs->bonus_card_num->currentText());
         rec->append(QSqlField(concreteAbs->keys[3]));
         rec->setValue(concreteAbs->keys[3], concreteAbs->medicines->currentText());
         rec->append(QSqlField(concreteAbs->keys[4]));
@@ -1259,7 +1342,8 @@ QString EditSellImplement::processFields(inputFields * abs) {
         }
         rec->setValue(concreteAbs->keys[5], val);
         rec->append(QSqlField(concreteAbs->keys[6]));
-        rec->setValue(concreteAbs->keys[6], concreteAbs->bonuses_to_withdraw->text());
+        if (!concreteAbs->bonus_card_num->currentText().isEmpty())
+            rec->setValue(concreteAbs->keys[6], concreteAbs->bonuses_to_withdraw->text());
         emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
         delete rec;
     }

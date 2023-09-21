@@ -30,8 +30,10 @@ protected:
     QSharedPointer<QSqlDatabase> db;
     // Модель представления таблицы
     SqlTableModel_Currency* model;
-    // Названия столбцов
-    QVector<QString> field_names;
+    // Названия столбцов в БД
+    QVector<QString> column_names;
+    // Заголовки столбцов
+    QVector<QString> readable_names;
 public:
     Entity(QSharedPointer<QSqlDatabase> odb);
     Entity(const Entity&) = delete;
@@ -46,7 +48,8 @@ public:
     QString filter() const;
     bool isDirty() const;
     QSqlError lastError() const;
-    QVector<QString> get_fnames() const;
+    QVector<QString> get_readable_names() const;
+    QVector<QString> get_column_names() const;
 
     bool addRecord(const QSqlRecord*);
     bool removeRecord(const int id);

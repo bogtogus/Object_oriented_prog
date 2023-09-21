@@ -34,7 +34,7 @@ protected:
     // имён столбцов в БД
     QVector<QString> keys;
     // Окно ввода данных
-    inputFields* InFAbs;
+    inputFields* InpFieldsAbstr;
     // Обработчик данных в окне ввода данных
     QSharedPointer<Implement> impl;
 

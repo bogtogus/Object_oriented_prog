@@ -179,24 +179,24 @@ void MainWindow::initDB() {
     if(!query->exec(qu)) {
         qDebug() << "Error when creating trigger in table \"medicines\"." << query->lastError();
     }
-    qu = "CREATE TABLE IF NOT EXISTS reged_customers ("
+    qu = "CREATE TABLE IF NOT EXISTS bonus_cards ("
                      "card_number INTEGER PRIMARY KEY,"
                      "name STRING NOT NULL,"
                      "balance INTEGER CHECK (balance >= 0) DEFAULT (0)"
                      ");";
     query->prepare(qu);
     if(!query->exec(qu)) {
-        qDebug() << "Error when creating table \"reged_customers\".";
+        qDebug() << "Error when creating table \"bonus_cards\".";
     }
     qu = "CREATE TABLE IF NOT EXISTS sales_history ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "date_of_buy DATE NOT NULL,"
-            "customer STRING,"
+            "date_of_sale DATE NOT NULL,"
+            "bonus_card_num STRING,"
             "medicines TEXT NOT NULL,"
             "pieces INTEGER CHECK (pieces > 0) NOT NULL,"
             "earnings BIGINT DEFAULT (0) NOT NULL,"
             "bonuses_withdrown INT,"
-            "FOREIGN KEY(customer) references reged_customers(card_number) "
+            "FOREIGN KEY(bonus_card_num) references bonus_cards(card_number) "
             "   ON DELETE NO ACTION,"
             "FOREIGN KEY(medicines) references medicines(id)"
             "ON DELETE NO ACTION ON UPDATE NO ACTION"
@@ -205,16 +205,16 @@ void MainWindow::initDB() {
     if(!query->exec(qu)) {
         qDebug() << "Error when creating table \"sales_history\".";
     }
-    qu = "UPDATE SQLITE_SEQUENCE SET seq = 10000000 WHERE name = \"reged_customers\";";
+    qu = "UPDATE SQLITE_SEQUENCE SET seq = 10000000 WHERE name = \"bonus_cards\";";
     query->prepare(qu);
     if(!query->exec(qu)) {
-        qDebug() << "Error when setting autoincrement in table \"reged_customers\".";
+        qDebug() << "Error when setting autoincrement in table \"bonus_cards\".";
     }
     qu = "CREATE TRIGGER date_valid "
          "   BEFORE INSERT "
          "       ON sales_history "
          "BEGIN "
-         "    SELECT CASE WHEN strftime(NEW.date_of_buy) != NEW.date_of_buy "
+         "    SELECT CASE WHEN strftime(NEW.date_of_sale) != NEW.date_of_sale "
          "        THEN RAISE(ABORT, \"Invalid date\") END; "
          "END; ";
     query->prepare(qu);

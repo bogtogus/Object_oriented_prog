@@ -18,7 +18,7 @@ MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
 {
     qDebug() << "CRT medics";
     prnt = parent;
-    InFAbs = nullptr;
+    InpFieldsAbstr = nullptr;
     entity = MEntity;
     ui->setupUi(this);
     this->setWindowTitle("Склад лекарств и препаратов");
@@ -29,12 +29,12 @@ MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
     ui->verticalLayout->insertWidget(0, menubar);
     ui->verticalLayout->insertWidget(1, toolbar);
 
-    QVector<QString> temp = entity->get_fnames();
+    QVector<QString> temp = entity->get_readable_names();
+    keys = entity->get_column_names();
     // загрузка модели в виджет QTableView
     init_table();
     // Формирование списка ключей и соответствия
-    for (int i = 0; i < entity->get_model()->record().count(); i++) {
-        keys.append(entity->get_model()->record().fieldName(i));
+    for (int i = 0; i < entity->columnCount(); i++) {
         fields.insert(keys[i], temp[i]);
     }
     temp.clear();
@@ -146,14 +146,14 @@ void MedicinesWindow::clicked_on_add() {
     qDebug() << fields;
     impl = QSharedPointer<Implement>(new AddMedsImplement());
     QMap<QString, QString> titles = {{"title", "Добавить запись."}, {"exec", "Добавить"}};
-    InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
+    InpFieldsAbstr = new MedsAbstr(titles, fields, keys, impl, this);
     titles.clear();
     connect(impl.get(),
             QOverload<const QSqlRecord*>::of(&Implement::exec_clicked_signal),
             this,
             &MedicinesWindow::add_record_db);
     impl.reset();
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -169,6 +169,8 @@ void MedicinesWindow::add_record_db(const QSqlRecord* record) {
     else {
         QMessageBox::warning(this, "Ошибка!",
                              "Ошибка добвления записи в таблицу!");
+        qDebug() << entity->lastError();
+        qDebug() << *record;
     }
     //fields_names.clear();
     saveact->setEnabled(true);
@@ -187,15 +189,15 @@ void MedicinesWindow::clicked_on_edit() {
     int row = selection->selectedIndexes().at(0).row();
     QSqlRecord record = entity->get_record(row);
     QMap<QString, QString> titles = {{"title", "Редактировать запись."}, {"exec", "Применить"}};
-    InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
-    InFAbs->fill_fields(record, row);
+    InpFieldsAbstr = new MedsAbstr(titles, fields, keys, impl, this);
+    InpFieldsAbstr->fill_fields(record, row);
     titles.clear();
     connect(impl.get(),
             QOverload<const QSqlRecord&, const int>::of(&Implement::exec_clicked_signal),
             this,
             &MedicinesWindow::edit_record_db);
     impl.reset();
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -228,13 +230,13 @@ void MedicinesWindow::edit_record_db(const QSqlRecord& record, const int row) {
 void MedicinesWindow::clicked_on_find() {
     impl = QSharedPointer<Implement>(new FindMedsImplement());
     QMap<QString, QString> titles = {{"title", "Найти запись."}, {"exec", "Найти"}};
-    InFAbs = new MedsAbstr(titles, fields, keys, impl, this);
+    InpFieldsAbstr = new MedsAbstr(titles, fields, keys, impl, this, true);
     connect(impl.get(),
             QOverload<const QString&>::of(&Implement::exec_clicked_signal),
             this,
             &MedicinesWindow::find_record_db);
     impl.reset();
-    emit summoned_child(InFAbs);
+    emit summoned_child(InpFieldsAbstr);
 }
 
 /*!
@@ -253,7 +255,7 @@ void MedicinesWindow::find_record_db(const QString& where) {
         }
     }
     else {
-        InFAbs->goback();
+        InpFieldsAbstr->goback();
         resetsrchact->setEnabled(true);
         delfoundact->setEnabled(true);
     }

@@ -60,7 +60,7 @@ Entity::Entity(Entity && moved) {
     this->model = moved.model;
     moved.model = nullptr;
     moved.db.clear();
-    this->field_names = moved.field_names;
+    this->readable_names = moved.readable_names;
 }
 
 /*!
@@ -75,14 +75,14 @@ Entity &Entity::operator=(Entity && moved) {
         if (this->model) delete this->model;
         this->model = moved.model;
         moved.model = nullptr;
-        this->field_names = moved.field_names;
+        this->readable_names = moved.readable_names;
     }
     return *this;
 }
 
 Entity::~Entity() {
     qDebug() << "del entity";
-    field_names.clear();
+    readable_names.clear();
     if (model) {
         //model->disconnect();
         delete model;
@@ -155,8 +155,12 @@ bool Entity::isDirty() const {
  * \brief Получить все наименования столбцов.
  * \return все наименования столбцов.
  */
-QVector<QString> Entity::get_fnames() const {
-    return field_names;
+QVector<QString> Entity::get_readable_names() const {
+    return readable_names;
+}
+
+QVector<QString> Entity::get_column_names() const {
+    return column_names;
 }
 
 /*!
@@ -245,9 +249,10 @@ MedsEntity::MedsEntity(QSharedPointer<QSqlDatabase> odb,
     model->setCurrencyColumn(7);
     model->setTable("medicines");
     //model->select();
-    this->field_names = fn;
+    this->readable_names = fn;
     for (int i = 0; i < model->columnCount(); i++) {
-        model->setHeaderData(i, Qt::Horizontal, field_names[i]);
+        this->column_names.append(model->headerData(i, Qt::Horizontal).toString());
+        model->setHeaderData(i, Qt::Horizontal, readable_names[i]);
     }
 }
 
@@ -449,11 +454,12 @@ BonusEntity::BonusEntity(QSharedPointer<QSqlDatabase> odb,
         qDebug() << "Unable to open db.";
         return;
     }
-    model->setTable("reged_customers");
+    model->setTable("bonus_cards");
     //model->select();
-    this->field_names = fn;
+    this->readable_names = fn;
     for (int i = 0; i < model->columnCount(); i++) {
-        model->setHeaderData(i, Qt::Horizontal, field_names[i]);
+        this->column_names.append(model->headerData(i, Qt::Horizontal).toString());
+        model->setHeaderData(i, Qt::Horizontal, readable_names[i]);
     }
 }
 
@@ -468,7 +474,7 @@ BonusEntity::~BonusEntity() {
 QVector<QString> BonusEntity::get_all_cards() const {
     QVector<QString> card_numbers;
     QSqlQuery query;
-    query.prepare("SELECT card_number FROM reged_customers;");
+    query.prepare("SELECT card_number FROM bonus_cards;");
     if (query.exec()) {
         while (query.next()) {
             card_numbers.append(query.value(0).toString());
@@ -490,7 +496,7 @@ bool BonusEntity::get_card_balance(const int card_number, int &balance) const {
     else {
         QSqlQuery query(db->connectionName());
         int count = 0;
-        query.prepare("SELECT balance FROM reged_customers WHERE card_number = :card_number");
+        query.prepare("SELECT balance FROM bonus_cards WHERE card_number = :card_number");
         query.bindValue(":card_number", card_number);
         if (query.exec()) {
             qDebug() << query.executedQuery();
@@ -562,7 +568,7 @@ void BonusEntity::apply_cache_info() {
 bool BonusEntity::update_balance(const int card_number, const int balance) {
     if (card_number < 10000000) return false;
     QSqlQuery query(db->connectionName());
-    query.prepare("UPDATE reged_customers SET balance = :balance WHERE card_number = :card_number");
+    query.prepare("UPDATE bonus_cards SET balance = :balance WHERE card_number = :card_number");
     query.bindValue(":balance", balance);
     query.bindValue(":card_number", card_number);
     bool ret = query.exec();
@@ -590,9 +596,10 @@ SellEntity::SellEntity(QSharedPointer<QSqlDatabase> odb,
     model->setCurrencyColumn(5);
     model->setTable("sales_history");
     //model->select();
-    this->field_names = fn;
+    this->readable_names = fn;
     for (int i = 0; i < model->columnCount(); i++) {
-        model->setHeaderData(i, Qt::Horizontal, field_names[i]);
+        this->column_names.append(model->headerData(i, Qt::Horizontal).toString());
+        model->setHeaderData(i, Qt::Horizontal, readable_names[i]);
     }
     this->meds = me;
     this->bonuscards = be;

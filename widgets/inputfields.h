@@ -42,11 +42,13 @@ protected:
     QPushButton* back; // кнопка назад
     QFormLayout* flay; // компоновка пар Метка-Поле
     QVBoxLayout* vlay; // компоновка flay с кнопками
+    bool search_mode;
 public:
     explicit inputFields(QWidget *parent,
                          const QMap<QString, QString>& titles,
                          const QMap<QString, QString>& fields,
-                         const QVector<QString>& keys);
+                         const QVector<QString>& keys,
+                         bool search_mode=false);
     virtual ~inputFields();
     virtual void fill_fields(const QSqlRecord&, const int) = 0;
     void goback() override;
@@ -65,6 +67,11 @@ private:
     QLineEdit* pieces;
     QLineEdit* price;
     QHBoxLayout* hlay;
+
+    QWidget* date_of_manuf_group;
+    QCheckBox* date_of_manuf_switch;
+    QWidget* expiry_date_group;
+    QCheckBox* expiry_date_switch;
 
     // номер изменяемой строки при соответствующей операции
     int row;
@@ -89,7 +96,8 @@ public:
                         const QMap<QString, QString>& fields,
                         const QVector<QString>& keys,
                         QSharedPointer<Implement> impl,
-                        QWidget *parent);
+                        QWidget *parent,
+                        bool search_mode=false);
     virtual ~MedsAbstr();
 };
 
@@ -126,8 +134,8 @@ class SellAbstr : public inputFields {
     Q_OBJECT
 private:
     // Элементы формы
-    QCalendarWidget* date_of_buy;
-    QComboBox* customer;
+    QCalendarWidget* date_of_sale;
+    QComboBox* bonus_card_num;
     QComboBox* medicines;
     QSpinBox* pieces;
     QLineEdit* earnings = nullptr;
@@ -141,6 +149,8 @@ private:
     int basic_price;
     int current_unit_price;
     bool edit_mode;
+    QWidget* date_of_sale_group;
+    QCheckBox* date_of_sale_switch;
 
     int row;
     void exec_clicked() override;
@@ -169,7 +179,8 @@ public:
                         const QVector<QString>& keys,
                         const SellEntity* en,
                         QSharedPointer<Implement> impl,
-                        QWidget *parent = nullptr);
+                        QWidget *parent,
+                        bool searching=false);
     virtual ~SellAbstr();
 };
 
