@@ -392,7 +392,14 @@ QString AddMedsImplement::processFields(inputFields* abs) {
         rec->append(QSqlField(concreteAbs->keys[6]));
         rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
         rec->append(QSqlField(concreteAbs->keys[7]));
-        int val = concreteAbs->price->text().remove('.').remove(',').toInt();
+        QString price_str =concreteAbs->price->text().replace('.', ',');
+        int val = 0;
+        if (price_str.contains(',')) {
+            val = price_str.remove(',').toInt();
+        }
+        else {
+            val = price_str.toInt() * 100;
+        }
         rec->setValue(concreteAbs->keys[7], val);
         emit Implement::exec_clicked_signal(rec);
         delete rec;
@@ -440,8 +447,16 @@ QString FindMedsImplement::processFields(inputFields * abs) {
     qDebug() << concreteAbs->price->hasAcceptableInput();
     if (!concreteAbs->price->text().isEmpty() &&
             concreteAbs->price->hasAcceptableInput()) {
+        QString price_str =concreteAbs->price->text().replace('.', ',');
+        int val = 0;
+        if (price_str.contains(',')) {
+            val = price_str.remove(',').toInt();
+        }
+        else {
+            val = price_str.toInt() * 100;
+        }
         where += concreteAbs->price->objectName() +
-                " = \"" + concreteAbs->price->text() + "\" AND ";
+                " = \"" + QString::number(val) + "\" AND ";
     }
     if (where.isEmpty()) {
         return "Все поля пусты, поиск невозможен!";
@@ -504,7 +519,14 @@ QString EditMedsImplement::processFields(inputFields* abs) {
         rec->append(QSqlField(concreteAbs->keys[6]));
         rec->setValue(concreteAbs->keys[6], concreteAbs->pieces->text());
         rec->append(QSqlField(concreteAbs->keys[7]));
-        int val = concreteAbs->price->text().remove('.').remove(',').toInt();
+        QString price_str =concreteAbs->price->text().replace('.', ',');
+        int val = 0;
+        if (price_str.contains(',')) {
+            val = price_str.remove(',').toInt();
+        }
+        else {
+            val = price_str.toInt() * 100;
+        }
         rec->setValue(concreteAbs->keys[7], val);
         emit Implement::exec_clicked_signal(*rec, concreteAbs->row);
         delete rec;
