@@ -53,6 +53,7 @@ protected slots:
     virtual void clicked_on_find() = 0;
     virtual void clicked_on_reset() = 0;
     virtual void clicked_on_delete_found() = 0;
+    virtual void contextMenuRequested(const QPoint& mousepos) = 0;
     void enable_rows_operations();
 public:
     DBWindow(QWidget *parent);

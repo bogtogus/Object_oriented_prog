@@ -112,6 +112,7 @@ void BonusProgWindow::init_table() {
     ui->table->setColumnWidth(0, 20);
     ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->table->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 /*!
@@ -128,6 +129,8 @@ void BonusProgWindow::connect_menu() {
     connect(resetsrchact, &QAction::triggered, this, &BonusProgWindow::clicked_on_reset);
     connect(saveact, &QAction::triggered, this, &BonusProgWindow::clicked_on_submit);
     connect(revertact, &QAction::triggered, this, &BonusProgWindow::clicked_on_revert);
+
+    connect(ui->table, &QWidget::customContextMenuRequested, this, &BonusProgWindow::contextMenuRequested);
 }
 
 /*!
@@ -261,7 +264,7 @@ void BonusProgWindow::find_record_db(const QString& where) {
  */
 void BonusProgWindow::clicked_on_delete_selected() {
     QItemSelectionModel* selection = ui->table->selectionModel();
-    QModelIndexList selection_list(selection->selectedIndexes());
+    QModelIndexList selection_list(selection->selectedRows());
     if (selection_list.isEmpty()) return;
 
     QMessageBox* msgBox = new QMessageBox("Удаление",
@@ -331,6 +334,15 @@ void BonusProgWindow::clicked_on_delete_found() {
         saveact->setEnabled(true);
         revertact->setEnabled(true);
     }
+}
+
+void BonusProgWindow::contextMenuRequested(const QPoint &mousepos) {
+    QMenu * menu = new QMenu(this);
+    menu->addAction(editact);
+    menu->addAction(addact);
+    menu->addAction(delselact);
+    menu->addAction(delfoundact);
+    menu->popup(ui->table->viewport()->mapToGlobal(mousepos));
 }
 
 /*!

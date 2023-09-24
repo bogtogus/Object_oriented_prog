@@ -46,7 +46,6 @@ SellHistWindow::SellHistWindow(QWidget *parent,
     }
     temp.clear();
     ui->table->resizeRowsToContents();
-    ui->table->setWordWrap(true);
 }
 
 SellHistWindow::~SellHistWindow() {
@@ -88,6 +87,8 @@ void SellHistWindow::init_table() {
     ui->table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->table->setModel(SEntity->get_model());
     ui->table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->table->setWordWrap(true);
+    ui->table->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 /*!
@@ -104,6 +105,8 @@ void SellHistWindow::connect_menu() {
     connect(resetsrchact, &QAction::triggered, this, &SellHistWindow::clicked_on_reset);
     connect(saveact, &QAction::triggered, this, &SellHistWindow::clicked_on_submit);
     connect(revertact, &QAction::triggered, this, &SellHistWindow::clicked_on_revert);
+
+    connect(ui->table, &QWidget::customContextMenuRequested, this, &SellHistWindow::contextMenuRequested);
 }
 
 /*!
@@ -376,7 +379,7 @@ void SellHistWindow::clicked_on_reset(){
  */
 void SellHistWindow::clicked_on_delete_selected() {
     QItemSelectionModel* selection = ui->table->selectionModel();
-    QModelIndexList selection_list(selection->selectedIndexes());
+    QModelIndexList selection_list(selection->selectedRows());
     if (selection_list.isEmpty()) return;
 
     QMessageBox* msgBox = new QMessageBox("Удаление",
@@ -439,6 +442,15 @@ void SellHistWindow::clicked_on_delete_found() {
         saveact->setEnabled(true);
         revertact->setEnabled(true);
     }
+}
+
+void SellHistWindow::contextMenuRequested(const QPoint &mousepos) {
+    QMenu * menu = new QMenu(this);
+    menu->addAction(editact);
+    menu->addAction(addact);
+    menu->addAction(delselact);
+    menu->addAction(delfoundact);
+    menu->popup(ui->table->viewport()->mapToGlobal(mousepos));
 }
 
 

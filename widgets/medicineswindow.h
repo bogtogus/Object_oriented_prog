@@ -44,6 +44,7 @@ private slots:
     void clicked_on_find() override;
     void clicked_on_reset() override;
     void clicked_on_delete_found() override;
+    void contextMenuRequested(const QPoint& mousepos) override;
 };
 
 #endif // MEDICINESWINDOW_H

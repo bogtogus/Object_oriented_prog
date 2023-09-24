@@ -38,7 +38,6 @@ MedicinesWindow::MedicinesWindow(QWidget *parent, MedsEntity* MEntity) :
         fields.insert(keys[i], temp[i]);
     }
     temp.clear();
-    ui->table->setWordWrap(true);
 }
 
 MedicinesWindow::~MedicinesWindow() {
@@ -65,6 +64,15 @@ void MedicinesWindow::resizeEvent(QResizeEvent *event) {
     event->accept();
 }
 
+void MedicinesWindow::contextMenuRequested(const QPoint &mousepos) {
+    QMenu * menu = new QMenu(this);
+    menu->addAction(editact);
+    menu->addAction(addact);
+    menu->addAction(delselact);
+    menu->addAction(delfoundact);
+    menu->popup(ui->table->viewport()->mapToGlobal(mousepos));
+}
+
 /*!
  * \brief Инициализация табличного представления, а именно
  * передача ему модели таблицы, а также настройка нескольких параметров представления.
@@ -83,6 +91,8 @@ void MedicinesWindow::init_table() {
     //header->close();
     header = nullptr;
     ui->table->setColumnWidth(0, 20);
+    ui->table->setWordWrap(true);
+    ui->table->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 /*!
@@ -99,6 +109,8 @@ void MedicinesWindow::connect_menu() {
     connect(resetsrchact, &QAction::triggered, this, &MedicinesWindow::clicked_on_reset);
     connect(saveact, &QAction::triggered, this, &MedicinesWindow::clicked_on_submit);
     connect(revertact, &QAction::triggered, this, &MedicinesWindow::clicked_on_revert);
+
+    connect(ui->table, &QWidget::customContextMenuRequested, this, &MedicinesWindow::contextMenuRequested);
 }
 
 /*!
@@ -327,7 +339,7 @@ void MedicinesWindow::clicked_on_delete_found() {
  */
 void MedicinesWindow::clicked_on_delete_selected() {
     QItemSelectionModel* selection = ui->table->selectionModel();
-    QModelIndexList selection_list(selection->selectedIndexes());
+    QModelIndexList selection_list(selection->selectedRows());
     if (selection_list.isEmpty()) return;
 
     QMessageBox* msgBox = new QMessageBox("Удаление",
