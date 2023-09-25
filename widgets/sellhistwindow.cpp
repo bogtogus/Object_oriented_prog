@@ -28,7 +28,6 @@ SellHistWindow::SellHistWindow(QWidget *parent,
     SEntity = se;
     InpFieldsAbstr = nullptr;
     record_being_edited = nullptr;
-    first_add = -1;
     ui->setupUi(this);
     ui->verticalLayout->setSpacing(1);
     init_menubar();
@@ -170,16 +169,17 @@ void SellHistWindow::clicked_on_add() {
  */
 void SellHistWindow::add_record_db(const QSqlRecord* record) {
     int med_id = record->value(keys[3]).toInt();
-    int sold = record->value(keys[4]).toInt();
+    int pieces_sold = record->value(keys[4]).toInt();
     int card_num = record->value(keys[2]).toInt();
     int withdrown = record->value(keys[6]).toInt();
+    int customer_spent = record->value(keys[5]).toInt();
 
-    if (MEntity->cache_contains(med_id) && !MEntity->is_enough_meds(med_id, sold)) {
+    if (MEntity->cache_contains(med_id) && !MEntity->is_enough_meds(med_id, pieces_sold)) {
         QMessageBox::warning(this, "Ошибка!",
                              "Ошибка добавления записи в таблицу! "
                              "На складе нет достаточного количества лекарства (id " +
                              QString::number(med_id) + ")! Запрошено " +
-                             QString::number(sold) + "шт. , в наличии " +
+                             QString::number(pieces_sold) + "шт. , в наличии " +
                              QString::number(MEntity->get_med_amount(med_id)) + "шт.");
         return;
     }
@@ -196,11 +196,10 @@ void SellHistWindow::add_record_db(const QSqlRecord* record) {
         QMessageBox::information(this, "Успех!",
                              "Введённая запись добавлена в временное представление таблицы базы данных. "
                              "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
-        if (first_add < 0) first_add = SEntity->rowCount() - 1;
         // Если в временном хранилище транзакций ещё не было операций
         // с данным id лекартсва, то она сначала добавляется в это хранилище
-        MEntity->add_temp_sale(med_id, sold);
-        BEntity->add_temp_withdraw(card_num, withdrown);
+        MEntity->add_temp_sale(med_id, pieces_sold);
+        BEntity->add_temp_withdraw(card_num, withdrown, customer_spent);
     }
     else {
         QMessageBox::warning(this, "Ошибка!",
@@ -249,6 +248,7 @@ void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
     int sold = record.value(keys[4]).toInt();
     int card_num = record.value(keys[2]).toInt();
     int withdrown = record.value(keys[6]).toInt();
+    int customer_spent = record.value(keys[5]).toInt();
 
     if (MEntity->cache_contains(med_id) && !MEntity->is_enough_meds(med_id, sold)) {
         QMessageBox::warning(this, "Ошибка!",
@@ -259,13 +259,13 @@ void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
                              QString::number(MEntity->get_med_amount(med_id)) + "шт.");
         return;
     }
-    if (BEntity->cache_contains(card_num) && !BEntity->is_enough_bonuses(card_num, withdrown)) {
+    if (!BEntity->is_enough_bonuses(card_num, withdrown)) {
         QMessageBox::warning(this, "Ошибка!",
                              "Ошибка добавления записи в таблицу! "
                              "На счету бонусной карты нет достаточного количества лекарства (id " +
                              QString::number(card_num) + ")! Попытка снять " +
-                             QString::number(withdrown) + "баллов , на счёте " +
-                             QString::number(BEntity->get_card_balance(card_num)) + "баллов.");
+                             QString::number(withdrown) + " баллов , на счёте " +
+                             QString::number(BEntity->get_card_balance(card_num)) + " баллов.");
         return;
     }
     if (SEntity->setRecord(row, record)) {
@@ -277,7 +277,7 @@ void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
             BEntity->remove_temp_withdraw(old_card_number);
         }
         MEntity->add_temp_sale(med_id, sold);
-        BEntity->add_temp_withdraw(card_num, withdrown);
+        BEntity->add_temp_withdraw(card_num, withdrown, customer_spent);
         delete record_being_edited;
         record_being_edited = nullptr;
     }
@@ -340,9 +340,11 @@ void SellHistWindow::clicked_on_submit() {
         qDebug() << SEntity->lastError();
     }
     else {
-        if (first_add >= 0) {
-            MEntity->apply_cache_info();
-            BEntity->apply_cache_info();
+        if (!MEntity->apply_cache_info()) {
+            qDebug() << MEntity->lastError();
+        }
+        if (!BEntity->apply_cache_info()) {
+            qDebug() << BEntity->lastError();
         }
         revertact->setEnabled(false);
         saveact->setEnabled(false);

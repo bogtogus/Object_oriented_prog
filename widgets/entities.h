@@ -8,10 +8,13 @@
 #include <QAbstractItemView>
 
 
+/*!
+ * \brief Модель таблицы Базы Данных с столбцом в денежном формате
+ */
 class SqlTableModel_Currency : public QSqlTableModel {
 Q_OBJECT
 private:
-    int price_column;
+    int currency_column;
 public:
     SqlTableModel_Currency(QObject* parent = nullptr, QSqlDatabase db = QSqlDatabase(), const int price_column = -1);
     ~SqlTableModel_Currency();
@@ -67,7 +70,9 @@ public:
 class MedsEntity : public Entity {
     Q_OBJECT
 private:
-    QMap<int, int> temp_amount;
+    // Кэш новых значений количества лекарств на складе
+    QHash<int, int> temp_amount;
+    bool update_amount(const int med_id, const int amount);
 public:
     MedsEntity(QSharedPointer<QSqlDatabase> odb,
                 const QVector<QString>&);
@@ -84,8 +89,7 @@ public:
     bool add_temp_sale(const int med_id, const int sold);
     bool remove_temp_sale(const int med_id);
     void clear_cache();
-    void apply_cache_info();
-    bool update_amount(const int med_id, const int amount);
+    bool apply_cache_info();
 };
 
 /*!
@@ -94,7 +98,11 @@ public:
 class BonusEntity : public Entity {
     Q_OBJECT
 private:
-    QMap<int, int> temp_balance;
+    /* Кэш новых значений баланса бонусных карт */
+    QHash<int, int> temp_balance;
+    /* Кэш потраченной клиентом суммы */
+    QHash<int, int> temp_spendings;
+    bool update_balance(const int card_number, const int balance);
 public:
     BonusEntity(QSharedPointer<QSqlDatabase> odb,
                 const QVector<QString>&);
@@ -105,11 +113,10 @@ public:
     bool is_enough_bonuses(const int card_number, const int amount) const;
     bool cache_contains(const int card_number) const;
 
-    bool add_temp_withdraw(const int card_number, const int withdrown);
+    bool add_temp_withdraw(const int card_number, const int points_withdrown, const int money_spent);
     bool remove_temp_withdraw(const int card_number);
     void clear_cache();
-    void apply_cache_info();
-    bool update_balance(const int card_number, const int balance);
+    bool apply_cache_info();
 };
 
 /*! Сущность История продаж

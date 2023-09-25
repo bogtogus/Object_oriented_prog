@@ -34,8 +34,6 @@ private:
     BonusEntity* BEntity;
     // объект, работающий с таблицей истории лекарств в БД
     SellEntity* SEntity;
-    // первый добавленный индекс в таблице
-    int first_add;
     // айди лекарства, которое было подвергнуто изменению
     QSqlRecord* record_being_edited;
 
