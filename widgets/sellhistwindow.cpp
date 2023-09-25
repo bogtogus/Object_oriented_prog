@@ -108,6 +108,13 @@ void SellHistWindow::connect_menu() {
     connect(ui->table, &QWidget::customContextMenuRequested, this, &SellHistWindow::contextMenuRequested);
 }
 
+void SellHistWindow::form_exit() {
+    if (record_being_edited) {
+        delete record_being_edited;
+        record_being_edited = nullptr;
+    }
+}
+
 /*!
  * \brief Метод возврата назад.
  * При несохранённых изменениях просит подтверждения действия.
@@ -159,6 +166,7 @@ void SellHistWindow::clicked_on_add() {
             QOverload<const QSqlRecord*>::of(&Implement::exec_clicked_signal),
             this,
             &SellHistWindow::add_record_db);
+    connect(InpFieldsAbstr, &SellAbstr::goback_signal, this, &SellHistWindow::form_exit);
     impl.reset();
     emit summoned_child(InpFieldsAbstr);
 }
@@ -242,49 +250,66 @@ void SellHistWindow::clicked_on_edit() {
  * \param row - строка в модели таблицы, где находится старая запись.
  */
 void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
-    int old_med_id = record_being_edited->value(keys[3]).toInt();
-    int old_card_number = record_being_edited->value(keys[2]).toInt();
-    int med_id = record.value(keys[3]).toInt();
-    int sold = record.value(keys[4]).toInt();
-    int card_num = record.value(keys[2]).toInt();
-    int withdrown = record.value(keys[6]).toInt();
-    int customer_spent = record.value(keys[5]).toInt();
-
-    if (MEntity->cache_contains(med_id) && !MEntity->is_enough_meds(med_id, sold)) {
-        QMessageBox::warning(this, "Ошибка!",
-                             "Ошибка добавления записи в таблицу! "
-                             "На складе нет достаточного количества лекарства (id " +
-                             QString::number(med_id) + ")! Запрошено " +
-                             QString::number(sold) + "шт. , в наличии " +
-                             QString::number(MEntity->get_med_amount(med_id)) + "шт.");
-        return;
-    }
-    if (!BEntity->is_enough_bonuses(card_num, withdrown)) {
-        QMessageBox::warning(this, "Ошибка!",
-                             "Ошибка добавления записи в таблицу! "
-                             "На счету бонусной карты нет достаточного количества лекарства (id " +
-                             QString::number(card_num) + ")! Попытка снять " +
-                             QString::number(withdrown) + " баллов , на счёте " +
-                             QString::number(BEntity->get_card_balance(card_num)) + " баллов.");
-        return;
-    }
     if (SEntity->setRecord(row, record)) {
         QMessageBox::information(this, "Успех!",
                              "Введённая запись отредактирована. "
                              "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
-        if (old_med_id != 0 && old_med_id != med_id && MEntity->cache_contains(old_med_id)) {
-            MEntity->remove_temp_sale(old_med_id);
-            BEntity->remove_temp_withdraw(old_card_number);
-        }
-        MEntity->add_temp_sale(med_id, sold);
-        BEntity->add_temp_withdraw(card_num, withdrown, customer_spent);
-        delete record_being_edited;
-        record_being_edited = nullptr;
     }
     else {
         QMessageBox::warning(this, "Ошибка!",
                              "Ошибка добвления записи в таблицу!");
+        qDebug() << SEntity->lastError();
     }
+    //int old_med_id = record_being_edited->value(keys[3]).toInt();
+    //int old_sold = record_being_edited->value(keys[4]).toInt();
+    //int old_card_number = record_being_edited->value(keys[2]).toInt();
+    //int old_withdrown = record_being_edited->value(keys[6]).toInt();
+    //int old_customer_spent = record_being_edited->value(keys[5]).toInt();
+
+    //int med_id = record.value(keys[3]).toInt();
+    //int sold = record.value(keys[4]).toInt();
+    //int card_num = record.value(keys[2]).toInt();
+    //int withdrown = record.value(keys[6]).toInt();
+    //int customer_spent = record.value(keys[5]).toInt();
+
+    //if (MEntity->cache_contains(med_id) && !MEntity->is_enough_meds(med_id, sold)) {
+    //    QMessageBox::warning(this, "Ошибка!",
+    //                         "Ошибка добавления записи в таблицу! "
+    //                         "На складе нет достаточного количества лекарства (id " +
+    //                         QString::number(med_id) + ")! Запрошено " +
+    //                         QString::number(sold) + "шт. , в наличии " +
+    //                         QString::number(MEntity->get_med_amount(med_id)) + "шт.");
+    //    return;
+    //}
+    //if (!BEntity->is_enough_bonuses(card_num, withdrown)) {
+    //    QMessageBox::warning(this, "Ошибка!",
+    //                         "Ошибка добавления записи в таблицу! "
+    //                         "На счету бонусной карты нет достаточного количества лекарства (id " +
+    //                         QString::number(card_num) + ")! Попытка снять " +
+    //                         QString::number(withdrown) + " баллов , на счёте " +
+    //                         QString::number(BEntity->get_card_balance(card_num)) + " баллов.");
+    //    return;
+    //}
+    //if (SEntity->setRecord(row, record)) {
+    //    QMessageBox::information(this, "Успех!",
+    //                         "Введённая запись отредактирована. "
+    //                         "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+    //
+    //    // Если изменился айди проданного лекарства, причём оно было в кэше, то из кэша значение удаляется
+    //    if (old_med_id != 0 && old_med_id != med_id && MEntity->cache_contains(old_med_id)) {
+    //        MEntity->remove_temp_sale(old_med_id);
+    //        BEntity->remove_temp_withdraw(old_card_number);
+    //    }
+    //    if (old_card_number != 0 && old_card_number != card_num && MEntity->cache_contains(old_card_number)) {
+    //        BEntity->remove_temp_withdraw(old_card_number);
+    //    }
+    //    MEntity->add_temp_sale(med_id, sold - old_sold);
+    //    BEntity->add_temp_withdraw(card_num, withdrown - old_withdrown, customer_spent - old_customer_spent);
+    //}
+    //else {
+    //    QMessageBox::warning(this, "Ошибка!",
+    //                         "Ошибка добвления записи в таблицу!");
+    //}
     //fields_names.clear();
     saveact->setEnabled(true);
     revertact->setEnabled(true);

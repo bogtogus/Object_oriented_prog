@@ -42,6 +42,7 @@ private:
     void edit_record_db(const QSqlRecord&, const int);
     void init_table();
     void connect_menu() override;
+    void form_exit();
 private slots:
     void closeEvent(QCloseEvent*) override;
     void resizeEvent(QResizeEvent *event) override;
