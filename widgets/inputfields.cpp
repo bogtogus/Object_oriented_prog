@@ -1288,8 +1288,16 @@ QString FindSellImplement::processFields(inputFields * abs) {
                 "\" AND ";
     }
     if (!concreteAbs->earnings->text().isEmpty() && concreteAbs->earnings->hasAcceptableInput()) {
-        where += concreteAbs->medicines->objectName() +
-                " = \"" + concreteAbs->medicines->currentText() +
+        QString earnings_str =concreteAbs->earnings->text().replace('.', ',');
+        int val = 0;
+        if (earnings_str.contains(',')) {
+            val = earnings_str.remove(',').toInt();
+        }
+        else {
+            val = earnings_str.toInt() * 100;
+        }
+        where += concreteAbs->earnings->objectName() +
+                " = \"" + QString::number(val) +
                 "\" AND ";
     }
     if (where.isEmpty()) {

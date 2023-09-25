@@ -58,8 +58,8 @@ void MedicinesWindow::resizeEvent(QResizeEvent *event) {
     ui->table->setColumnWidth(3, 110);
     ui->table->setColumnWidth(4, 110);
     ui->table->setColumnWidth(5, 70);
-    ui->table->setColumnWidth(6, 110);
-    ui->table->setColumnWidth(7, 60);
+    ui->table->setColumnWidth(6, 70);
+    ui->table->setColumnWidth(7, 110);
     ui->table->resizeRowsToContents();
     event->accept();
 }
