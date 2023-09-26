@@ -932,19 +932,25 @@ void SellAbstr::produceField3() {
  * \brief Построение поля ввода количества купленного лекартсва.
  */
 void SellAbstr::produceField4() {
-    QLabel* label_4 = new QLabel(fields[keys[4]], this);
-    label_4->setObjectName("label_4");
-    label_4->setStyleSheet(LABEL_STYLE);
-    //labels.push_back(label_3);
-    pieces = new QSpinBox(this);
-    pieces->setObjectName(keys[4]);
-    pieces->setStyleSheet("QSpinBox { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
-    pieces->setMinimumHeight(30);
-    pieces->setMaximumWidth(50);
-    connect(pieces, QOverload<int>::of(&QSpinBox::valueChanged), this, &SellAbstr::med_amount_changed);
-    pieces->setMinimum(1);
-    flay->addRow(label_4, pieces);
-    label_4 = nullptr;
+    if (!search_mode) {
+        QLabel* label_4 = new QLabel(fields[keys[4]], this);
+        label_4->setObjectName("label_4");
+        label_4->setStyleSheet(LABEL_STYLE);
+        //labels.push_back(label_3);
+        pieces = new QSpinBox(this);
+        pieces->setObjectName(keys[4]);
+        pieces->setStyleSheet("QSpinBox { font-family: \"Sans Serif\"; font-style: regular; font-size: 17px; }");
+        pieces->setMinimumHeight(30);
+        pieces->setMaximumWidth(50);
+        connect(pieces, QOverload<int>::of(&QSpinBox::valueChanged), this, &SellAbstr::med_amount_changed);
+        pieces->setMinimum(1);
+        flay->addRow(label_4, pieces);
+        label_4 = nullptr;
+    }
+    else {
+        pieces = new QSpinBox(this);
+        pieces->setVisible(false);
+    }
 }
 
 /*!
@@ -1038,7 +1044,10 @@ void SellAbstr::finalization() {
  * этого лекарства на складе. Также меняет значение в поле выручки.
  */
 void SellAbstr::med_changed(const QString& med_id) {
-    if (medicines->currentIndex() == 0) {
+    if (search_mode) {
+        return;
+    }
+    else if (medicines->currentIndex() == 0) {
         pieces->setEnabled(false);
         if (earnings) earnings->setText("");
         bonuswidget->setVisible(false);
@@ -1079,12 +1088,12 @@ void SellAbstr::med_amount_changed(int value) {
     else {
         basic_price = -1;
     }
-    recalc_earnings();
+    if (!search_mode) recalc_earnings();
 }
 
 void SellAbstr::card_changed(const QString&) {
     bonuswidget->setVisible((bool)(bonus_card_num->currentIndex() != 0 && medicines->currentIndex() != 0));
-    if (bonus_card_num->currentIndex() != 0)
+    if (bonus_card_num->currentIndex() != 0 && !search_mode)
         recalc_earnings();
 }
 
