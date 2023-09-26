@@ -85,6 +85,7 @@ public:
     int get_med_amount(const int med_id) const;
     bool is_enough_meds(const int med_id, const int amount) const;
     bool cache_contains(const int med_id) const;
+    bool is_already_exists(const QSqlRecord*) const;
 
     bool add_temp_sale(const int med_id, const int sold);
     bool remove_temp_sale(const int med_id);
@@ -112,6 +113,7 @@ public:
     int get_card_balance(const int card_number) const;
     bool is_enough_bonuses(const int card_number, const int amount) const;
     bool cache_contains(const int card_number) const;
+    bool is_already_exists(const QSqlRecord*) const;
 
     bool add_temp_withdraw(const int card_number, const int points_withdrown, const int money_spent);
     bool remove_temp_withdraw(const int card_number);

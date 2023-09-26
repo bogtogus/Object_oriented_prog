@@ -157,20 +157,25 @@ void BonusProgWindow::clicked_on_add() {
  * \param record - сформированная запись.
  */
 void BonusProgWindow::add_record_db(const QSqlRecord* record) {
-    if (entity->addRecord(record)) {
+    if (entity->is_already_exists(record)) {
+        QMessageBox::warning(this, "Ошибка!",
+                             "Такая бонусная карта уже зарегистрирована!");
+    }
+    else if (entity->addRecord(record)) {
         QMessageBox::information(this, "Успех!",
                              "Введённая запись добавлена в временное представление таблицы базы данных. "
                              "Чтобы сохранить изменения, нажмите \"Сохранить\" в меню управления таблицей.");
+        saveact->setEnabled(true);
+        revertact->setEnabled(true);
     }
     else {
         QMessageBox::warning(this, "Ошибка!",
                              "Ошибка добвления записи в таблицу!");
         qDebug() << entity->lastError();
         qDebug() << *record;
+        saveact->setEnabled(true);
+        revertact->setEnabled(true);
     }
-    //fields_names.clear();
-    saveact->setEnabled(true);
-    revertact->setEnabled(true);
 }
 
 /*!

@@ -369,6 +369,35 @@ bool MedsEntity::cache_contains(const int med_id) const {
     return temp_amount.contains(med_id);
 }
 
+bool MedsEntity::is_already_exists(const QSqlRecord* record) const {
+    QSqlQuery query(db->connectionName());
+    bool result = false;
+    query.prepare("SELECT id FROM medicines WHERE "
+                  "manufactorer = :manufactorer "
+                  "AND name = :name "
+                  "AND date_of_manuf = :date_of_manuf "
+                  "AND expiry_date = :expiry_date "
+                  "AND on_prescription = :on_prescription "
+                  "AND price_for_one = :price_for_one "
+                  "LIMIT 1;");
+    query.bindValue(":manufactorer", record->value(0).toString());
+    query.bindValue(":name", record->value(1).toString());
+    query.bindValue(":date_of_manuf", record->value(2).toString());
+    query.bindValue(":expiry_date", record->value(3).toString());
+    query.bindValue(":on_prescription", record->value(4).toString());
+    query.bindValue(":price_for_one", record->value(6).toString());
+    qDebug() << query.boundValues();
+    if (query.exec()) {
+        result = query.next();
+    }
+    else {
+        qDebug() << query.lastError();
+        result = false;
+    }
+    query.clear();
+    return result;
+}
+
 /*!
  * \brief Добавление в кэш нового значения или обновление ранее добавленного
  * количества лекарства после продажи.
@@ -618,6 +647,23 @@ bool BonusEntity::is_enough_bonuses(const int card_number, const int amount) con
 bool BonusEntity::cache_contains(const int card_number) const {
     if (card_number < 10000000) return false;
     return temp_balance.contains(card_number);
+}
+
+bool BonusEntity::is_already_exists(const QSqlRecord* record) const {
+    QSqlQuery query(db->connectionName());
+    bool result = false;
+    query.prepare("SELECT card_number FROM bonus_cards WHERE "
+                  "card_number = :card_number "
+                  "LIMIT 1;");
+    query.bindValue(":card_number", record->value(0).toString());
+    if (query.exec()) {
+        result = query.next();
+    }
+    else {
+        result = false;
+    }
+    query.clear();
+    return result;
 }
 
 /*!
