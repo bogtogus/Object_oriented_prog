@@ -161,9 +161,9 @@ private:
     void produceField5();
     void produceField6();
     void finalization();
-    void med_changed(const QString& med_id);
+    void med_changed(int combobox_index);
     void med_amount_changed(int amount);
-    void card_changed(const QString& card_id);
+    void card_changed(int combobox_index);
     void withdraw_all_state(int state);
     void bonus_withdraw_edited(const QString&);
     void fill_fields(const QSqlRecord&, const int) override;

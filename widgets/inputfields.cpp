@@ -899,7 +899,7 @@ void SellAbstr::produceField2() {
     for (; it != card_numbers.end(); it++) {
         bonus_card_num->addItem(*it);
     }
-    connect(bonus_card_num, QOverload<const QString&>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::card_changed);
+    connect(bonus_card_num, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::card_changed);
     flay->addRow(label_2, bonus_card_num);
     label_2 = nullptr;
 
@@ -923,7 +923,7 @@ void SellAbstr::produceField3() {
         medicines->addItem(*it);
     }
     medicines->setMinimumHeight(30);
-    connect(medicines, QOverload<const QString&>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::med_changed);
+    connect(medicines, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SellAbstr::med_changed);
     flay->addRow(label_3, medicines);
     label_3 = nullptr;
 }
@@ -1043,7 +1043,7 @@ void SellAbstr::finalization() {
  * максимальное допустимое значение лекарства в соответствии с количеством
  * этого лекарства на складе. Также меняет значение в поле выручки.
  */
-void SellAbstr::med_changed(const QString& med_id) {
+void SellAbstr::med_changed(int) {
     if (search_mode) {
         return;
     }
@@ -1057,8 +1057,9 @@ void SellAbstr::med_changed(const QString& med_id) {
         bonuswidget->setVisible((bool)(bonus_card_num->currentIndex() != 0));
         pieces->setEnabled(true);
         int amount = 0;
+        int med_id = medicines->currentText().toInt();
         //int price = 0;
-        if (!entity->get_med_amount(med_id.toInt(), amount)) {
+        if (!entity->get_med_amount(med_id, amount)) {
             pieces->setMinimum(0);
             pieces->setMaximum(0);
             basic_price = -1;
@@ -1066,7 +1067,7 @@ void SellAbstr::med_changed(const QString& med_id) {
         }
         else {
             pieces->setMaximum(amount);
-            if (entity->get_med_price(med_id.toInt(), current_unit_price)) {
+            if (entity->get_med_price(med_id, current_unit_price)) {
                 basic_price = current_unit_price * pieces->value();
             } else {
                 basic_price = -1;
@@ -1091,7 +1092,7 @@ void SellAbstr::med_amount_changed(int value) {
     if (!search_mode) recalc_earnings();
 }
 
-void SellAbstr::card_changed(const QString&) {
+void SellAbstr::card_changed(int) {
     bonuswidget->setVisible((bool)(bonus_card_num->currentIndex() != 0 && medicines->currentIndex() != 0));
     if (bonus_card_num->currentIndex() != 0 && !search_mode)
         recalc_earnings();

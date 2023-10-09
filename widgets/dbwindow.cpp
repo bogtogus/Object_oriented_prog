@@ -26,7 +26,7 @@ void DBWindow::init_menubar() {
     backact = new QAction(this->style()->standardIcon(QStyle::SP_ArrowLeft),
                           "",
                           menubar);
-    backact->setShortcut(Qt::CTRL + Qt::Key_Left);
+    backact->setShortcut(Qt::CTRL | Qt::Key_Left);
     menubar->addAction(backact);
 
     progmenu = new QMenu("Программа", menubar);
@@ -35,7 +35,7 @@ void DBWindow::init_menubar() {
     //                    "Выход",
     //                    this,
     //                    &MedicinesWindow::closem,
-    //                    Qt::CTRL + Qt::Key_Q);
+    //                    Qt::CTRL | Qt::Key_Q);
     menubar->addMenu(progmenu);
 
     editing = new QMenu("Правка", menubar);
@@ -56,7 +56,7 @@ void DBWindow::init_menubar() {
 
     searchmenu = new QMenu("Поиск", menubar);
     searchact = new QAction("Поиск", searchmenu);
-    searchact->setShortcut(Qt::CTRL + Qt::Key_F);
+    searchact->setShortcut(Qt::CTRL | Qt::Key_F);
     searchmenu->addAction(searchact);
     resetsrchact = new QAction("Сброс поиска", editing);
     resetsrchact->setEnabled(false);
@@ -67,13 +67,13 @@ void DBWindow::init_menubar() {
     toolbar->setStyleSheet("QToolBar { padding: 0; spacing: 5px; }");
     saveact = new QAction(this->style()->standardIcon(QStyle::SP_DialogSaveButton),
                                 "Сохранить", toolbar);
-    saveact->setShortcut(Qt::CTRL + Qt::Key_S);
+    saveact->setShortcut(Qt::CTRL | Qt::Key_S);
     saveact->setEnabled(false);
 
     toolbar->addAction(saveact);
     revertact = new QAction(this->style()->standardIcon(QStyle::SP_DialogCancelButton),
                                 "Отменить", toolbar);
-    revertact->setShortcut(Qt::CTRL + Qt::Key_R);
+    revertact->setShortcut(Qt::CTRL | Qt::Key_R);
     revertact->setEnabled(false);
     toolbar->addAction(revertact);
     connect_menu();

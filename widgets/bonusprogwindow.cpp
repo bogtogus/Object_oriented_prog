@@ -68,12 +68,12 @@ void BonusProgWindow::resizeEvent(QResizeEvent *event) {
  */
 void BonusProgWindow::goback() {
     if (entity->isDirty()) {
-        QMessageBox* msgBox = new QMessageBox("Возврат назад",
+        QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                              "Возврат назад",
                                               "В базу данных не внемены изменения."
                                               "Отменить их и вернуться назад?\n",
-                                              QMessageBox::Question,
-                                              QMessageBox::Button::Yes,
-                                              QMessageBox::Button::No,
+                                              QMessageBox::Button::Yes |
+                                              QMessageBox::Button::No |
                                               QMessageBox::Button::Cancel,
                                               this);
         int resBtn = msgBox->exec();
@@ -272,11 +272,11 @@ void BonusProgWindow::clicked_on_delete_selected() {
     QModelIndexList selection_list(selection->selectedRows());
     if (selection_list.isEmpty()) return;
 
-    QMessageBox* msgBox = new QMessageBox("Удаление",
+    QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                          "Удаление",
                                           "",
-                                          QMessageBox::Question,
-                                          QMessageBox::Button::Yes,
-                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Yes |
+                                          QMessageBox::Button::No |
                                           QMessageBox::Button::Cancel,
                                           this);
     int resBtn = 0;
@@ -321,11 +321,11 @@ void BonusProgWindow::clicked_on_reset() {
  */
 void BonusProgWindow::clicked_on_delete_found() {
     if (entity->filter() == "") return;
-    QMessageBox* msgBox = new QMessageBox("Удаление найденных",
+    QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                          "Удаление найденных",
                                           "Удалить все найденные записи?\n",
-                                          QMessageBox::Question,
-                                          QMessageBox::Button::Yes,
-                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Yes |
+                                          QMessageBox::Button::No |
                                           QMessageBox::Button::Cancel,
                                           this);
     int resBtn = msgBox->exec();

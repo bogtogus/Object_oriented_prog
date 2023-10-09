@@ -122,12 +122,12 @@ void SellHistWindow::form_exit() {
  */
 void SellHistWindow::goback() {
     if (SEntity->isDirty()) {
-        QMessageBox* msgBox = new QMessageBox("Возврат назад",
+        QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                              "Возврат назад",
                                               "В базу данных не внемены изменения."
                                               "Отменить их и вернуться назад?\n",
-                                              QMessageBox::Question,
-                                              QMessageBox::Button::Yes,
-                                              QMessageBox::Button::No,
+                                              QMessageBox::Button::Yes |
+                                              QMessageBox::Button::No |
                                               QMessageBox::Button::Cancel,
                                               this);
         int resBtn = msgBox->exec();
@@ -409,11 +409,11 @@ void SellHistWindow::clicked_on_delete_selected() {
     QModelIndexList selection_list(selection->selectedRows());
     if (selection_list.isEmpty()) return;
 
-    QMessageBox* msgBox = new QMessageBox("Удаление",
+    QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                          "Удаление",
                                           "",
-                                          QMessageBox::Question,
-                                          QMessageBox::Button::Yes,
-                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Yes |
+                                          QMessageBox::Button::No |
                                           QMessageBox::Button::Cancel,
                                           this);
     int resBtn = 0;
@@ -451,11 +451,11 @@ void SellHistWindow::clicked_on_delete_selected() {
  */
 void SellHistWindow::clicked_on_delete_found() {
     if (SEntity->filter() == "") return;
-    QMessageBox* msgBox = new QMessageBox("Удаление найденных",
+    QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                          "Удаление найденных",
                                           "Удалить все найденные записи?\n",
-                                          QMessageBox::Question,
-                                          QMessageBox::Button::Yes,
-                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Yes |
+                                          QMessageBox::Button::No |
                                           QMessageBox::Button::Cancel,
                                           this);
     int resBtn = msgBox->exec();

@@ -120,12 +120,12 @@ void MedicinesWindow::connect_menu() {
  */
 void MedicinesWindow::goback() {
     if (entity->isDirty()) {
-        QMessageBox* msgBox = new QMessageBox("Возврат назад",
+        QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                              "Возврат назад",
                                               "В базу данных не внемены изменения."
                                               "Отменить их и вернуться назад?\n",
-                                              QMessageBox::Question,
-                                              QMessageBox::Button::Yes,
-                                              QMessageBox::Button::No,
+                                              QMessageBox::Button::Yes |
+                                              QMessageBox::Button::No |
                                               QMessageBox::Button::Cancel,
                                               this);
         int resBtn = msgBox->exec();
