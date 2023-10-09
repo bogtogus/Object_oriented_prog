@@ -257,7 +257,7 @@ void SellHistWindow::edit_record_db(const QSqlRecord & record, const int row) {
     }
     else {
         QMessageBox::warning(this, "Ошибка!",
-                             "Ошибка добвления записи в таблицу!");
+                             "Ошибка добавления записи в таблицу!");
         qDebug() << SEntity->lastError();
     }
     //int old_med_id = record_being_edited->value(keys[3]).toInt();

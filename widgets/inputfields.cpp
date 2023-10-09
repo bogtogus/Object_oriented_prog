@@ -16,7 +16,7 @@ inputFields::inputFields(QWidget *parent,
     ui(new Ui::inputFields)
 {
     ui->setupUi(this);
-    this->setWindowTitle("Добавить");
+    this->setWindowTitle(titles.value("exec", "Undefined"));
     this->setGeometry(prnt->geometry());
     setAttribute(Qt::WA_DeleteOnClose);
     connect(ui->back, &QPushButton::clicked, this, &inputFields::goback);
@@ -54,7 +54,7 @@ void inputFields::buildLayout() {
     flay->setVerticalSpacing(7);
     flay->setHorizontalSpacing(7);
     QLabel* title = new QLabel(titles.value("title", "Undefined"), this);
-    title->setStyleSheet("QLabel { font: italic; font-size: 20px; }");
+    title->setStyleSheet("QLabel { font-style: italic; font-size: 20px; }");
     title->setMaximumHeight(30);
     title->setAlignment(Qt::AlignCenter);
     //vlay->addWidget(title, Qt::AlignCenter);
@@ -157,7 +157,7 @@ void MedsAbstr::produceField3() {
         date_of_manuf = new QCalendarWidget(date_of_manuf_group);
         date_of_manuf_group->layout()->addWidget(date_of_manuf);
         date_of_manuf_switch = new QCheckBox(date_of_manuf_group);
-        date_of_manuf_switch->setStyleSheet("QCheckBox { font: regular 12px; }"
+        date_of_manuf_switch->setStyleSheet("QCheckBox { font-style: regular; font-size: 16px; }"
                                             "QCheckBox::indicator {"
                                             "width: 16px;"
                                             "height: 16px;"
@@ -199,7 +199,7 @@ void MedsAbstr::produceField4() {
         expiry_date = new QCalendarWidget(expiry_date_group);
         expiry_date_group->layout()->addWidget(expiry_date);
         expiry_date_switch = new QCheckBox(expiry_date_group);
-        expiry_date_switch->setStyleSheet("QCheckBox { font: regular 12px; }"
+        expiry_date_switch->setStyleSheet("QCheckBox { font-style: regular; font-size: 16px; }"
                                           "QCheckBox::indicator {"
                                           "width: 16px;"
                                           "height: 16px;"
@@ -233,7 +233,7 @@ void MedsAbstr::produceField4() {
 void MedsAbstr::produceField5() {
     on_prescription = new QCheckBox(fields[keys[5]], this);
     on_prescription->setObjectName(keys[5]);
-    on_prescription->setStyleSheet("QCheckBox { font: regular 12px; }"
+    on_prescription->setStyleSheet("QCheckBox { font-style: regular; font-size: 16px; }"
                            "QCheckBox::indicator {"
                            "width: 16px;"
                            "height: 16px;"
@@ -295,7 +295,7 @@ void MedsAbstr::finalization() {
     hlay->addWidget(ui->back);
     exec_button = new QPushButton(titles.value("exec", "Undefined"), this);
     exec_button->setObjectName("exec_button");
-    exec_button->setStyleSheet("QPushButton {font: regular 12px; }");
+    exec_button->setStyleSheet("QPushButton { font-style: regular; font-size: 16px; }");
     exec_button->setMaximumHeight(ui->back->maximumHeight());
     exec_button->setMaximumWidth(200);
     exec_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -649,7 +649,7 @@ void BonusAbstr::finalization() {
     hlay->addWidget(ui->back);
     exec_button = new QPushButton(titles.value("exec", "Undefined"), this);
     exec_button->setObjectName("exec_button");
-    exec_button->setStyleSheet("QPushButton {font: regular 12px; }");
+    exec_button->setStyleSheet("QPushButton { font-style: regular; font-size: 16px; }");
     exec_button->setMaximumHeight(ui->back->maximumHeight());
     exec_button->setMaximumWidth(200);
     exec_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -854,7 +854,7 @@ void SellAbstr::produceField1() {
         date_of_sale = new QCalendarWidget(date_of_sale_group);
         date_of_sale_group->layout()->addWidget(date_of_sale);
         date_of_sale_switch = new QCheckBox(date_of_sale_group);
-        date_of_sale_switch->setStyleSheet("QCheckBox { font: regular 12px; }"
+        date_of_sale_switch->setStyleSheet("QCheckBox { font-style: regular; font-size: 16px; }"
                                             "QCheckBox::indicator {"
                                             "width: 16px;"
                                             "height: 16px;"
@@ -1026,7 +1026,7 @@ void SellAbstr::finalization() {
     hlay->addWidget(ui->back);
     exec_button = new QPushButton(titles.value("exec", "Undefined"), this);
     exec_button->setObjectName("exec_button");
-    exec_button->setStyleSheet("QPushButton {font-style: regular; font-size: 18px; }");
+    exec_button->setStyleSheet("QPushButton {font-style: regular; font-size: 16px; }");
     exec_button->setMaximumHeight(ui->back->maximumHeight());
     exec_button->setMaximumWidth(200);
     exec_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);

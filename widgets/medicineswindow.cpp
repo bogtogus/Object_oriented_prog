@@ -318,11 +318,11 @@ void MedicinesWindow::clicked_on_reset(){
  */
 void MedicinesWindow::clicked_on_delete_found() {
     if (entity->filter() == "") return;
-    QMessageBox* msgBox = new QMessageBox("Удаление найденных",
+    QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                          "Удаление найденных",
                                           "Удалить все найденные записи?\n",
-                                          QMessageBox::Question,
-                                          QMessageBox::Button::Yes,
-                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Yes |
+                                          QMessageBox::Button::No |
                                           QMessageBox::Button::Cancel,
                                           this);
     int resBtn = msgBox->exec();
@@ -347,11 +347,11 @@ void MedicinesWindow::clicked_on_delete_selected() {
     QModelIndexList selection_list(selection->selectedRows());
     if (selection_list.isEmpty()) return;
 
-    QMessageBox* msgBox = new QMessageBox("Удаление",
+    QMessageBox* msgBox = new QMessageBox(QMessageBox::Question,
+                                          "Удаление",
                                           "",
-                                          QMessageBox::Question,
-                                          QMessageBox::Button::Yes,
-                                          QMessageBox::Button::No,
+                                          QMessageBox::Button::Yes |
+                                          QMessageBox::Button::No |
                                           QMessageBox::Button::Cancel,
                                           this);
     int resBtn = 0;
