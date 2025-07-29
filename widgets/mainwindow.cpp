@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "aboutwindow.h"
+#include "confirmwindow.h"
 
 /*!
  * \brief Конструктор главного окна.
@@ -39,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->tomedicines, &QPushButton::clicked, this, &MainWindow::tomedicines_clicked);
     connect(ui->tobonusprogram, &QPushButton::clicked, this, &MainWindow::tobonusprogram_clicked);
     connect(ui->tosellhistory, &QPushButton::clicked, this, &MainWindow::tosellhistory_clicked);
+    connect(ui->aboutprogram, &QAction::triggered, this, &MainWindow::openAbout);
     //ui->drugery_logo->setMinimumSize(ui->drugery_logo->minimumHeight(), ui->drugery_logo->minimumHeight());
     //ui->drugery_logo->setMaximumSize(ui->drugery_logo->minimumHeight(), ui->drugery_logo->minimumHeight());
 }
@@ -75,14 +78,12 @@ MainWindow::~MainWindow() {
  * \details Запрашивается подтверждение закрытия окна.
  */
 void MainWindow::closeEvent(QCloseEvent *event) {
-    QMessageBox::StandardButton resBtn = QMessageBox::question( this, "Выход",
-                                                                "Выйти из приложения? Все несохранённые изменения будут отменены.\n",
-                                                                QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
-                                                                QMessageBox::Yes);
-    if (resBtn != QMessageBox::Yes) {
+    ConfirmWindow* dialog = new ConfirmWindow("Выйти из приложения? Все несохранённые изменения будут отменены.\n");
+    dialog->exec();
+    if (dialog->result() != QDialog::Accepted) {
         event->ignore();
-    }
-    else {
+        dialog->deleteLater();
+    } else {
         if (db->isOpen()) {
             qDebug() << "close db";
             db->close();
@@ -323,4 +324,9 @@ void MainWindow::on_aboutbonuses_clicked() {
     if (font) delete font;
     if (about) delete about;
     if (px) delete px;
+}
+
+void MainWindow::openAbout() {
+    AboutWindow* info = new AboutWindow();
+    info->exec();
 }

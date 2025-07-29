@@ -22,7 +22,9 @@ SOURCES += \
     $${subdir}/mainwindow.cpp \
     $${subdir}/medicineswindow.cpp \
     $${subdir}/sellhistwindow.cpp \
-    $${subdir}/dbwindow.cpp
+    $${subdir}/dbwindow.cpp \
+    $${subdir}/aboutwindow.cpp \
+    $${subdir}/confirmwindow.cpp
 
 HEADERS += \
     $${subdir}/achildwin.h \
@@ -32,7 +34,9 @@ HEADERS += \
     $${subdir}/mainwindow.h \
     $${subdir}/medicineswindow.h \
     $${subdir}/sellhistwindow.h \
-    $${subdir}/dbwindow.h
+    $${subdir}/dbwindow.h \
+    $${subdir}/aboutwindow.h \
+    $${subdir}/confirmwindow.h
 
 FORMS += \
     $${subdir}/bonusprogwindow.ui \

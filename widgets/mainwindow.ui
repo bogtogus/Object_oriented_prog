@@ -283,15 +283,35 @@
             <property name="font">
              <font>
               <pointsize>12</pointsize>
+              <bold>true</bold>
              </font>
             </property>
             <property name="frameShape">
-             <enum>QFrame::Box</enum>
+             <enum>QFrame::NoFrame</enum>
             </property>
             <property name="text">
-             <string>Аптека «Фиалка»</string>
+             <string>Фиалка-Системс</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>60</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -319,6 +339,34 @@
     </item>
    </layout>
   </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>471</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::RightToLeft</enum>
+   </property>
+   <widget class="QMenu" name="about">
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="title">
+     <string>Справка</string>
+    </property>
+    <addaction name="aboutprogram"/>
+   </widget>
+   <addaction name="about"/>
+  </widget>
+  <action name="aboutprogram">
+   <property name="text">
+    <string>О программе</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

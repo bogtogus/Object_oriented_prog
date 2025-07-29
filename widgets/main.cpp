@@ -6,11 +6,10 @@
  * \brief В файле создаётся и выводится на экран объект главного окна.
 */
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     MainWindow w;
-    w.setWindowTitle("Аптека");
+    w.setWindowTitle("Фиалка-Системс");
     w.show();
     return a.exec();
 }

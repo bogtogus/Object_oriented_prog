@@ -53,6 +53,7 @@ private slots:
     void tosellhistory_clicked();
     void closeEvent(QCloseEvent *event) override;
     void on_aboutbonuses_clicked();
+    void openAbout();
 
 private:
     Ui::MainWindow *ui;

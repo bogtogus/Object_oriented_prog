@@ -29,15 +29,6 @@ void DBWindow::init_menubar() {
     backact->setShortcut(Qt::CTRL | Qt::Key_Left);
     menubar->addAction(backact);
 
-    progmenu = new QMenu("Программа", menubar);
-    progmenu->addAction("Настройки");
-    //progmenu->addAction(this->style()->standardIcon(QStyle::SP_DialogCloseButton),
-    //                    "Выход",
-    //                    this,
-    //                    &MedicinesWindow::closem,
-    //                    Qt::CTRL | Qt::Key_Q);
-    menubar->addMenu(progmenu);
-
     editing = new QMenu("Правка", menubar);
     addact = new QAction("Добавить", editing);
     editing->addAction(addact);
